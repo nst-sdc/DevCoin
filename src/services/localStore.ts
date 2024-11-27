@@ -11,9 +11,9 @@ const initializeStore = () => {
       id: '1',
       email: 'vivek.aryanvbw@gmail.com',
       name: 'Vivek W',
-      github: 'vivek-w',
+      github: 'aryanvbw',
       role: 'super_admin',
-      avatar: `https://avatars.githubusercontent.com/vivek-w`
+      avatar: `https://avatars.githubusercontent.com/aryanvbw`
     };
     setUsers([superAdmin]);
   }

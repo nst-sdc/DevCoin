@@ -129,7 +129,7 @@ export default function CoinsPage() {
           {showOtherForm && (
             <div className="mt-4">
               <iframe
-                src="https://docs.google.com/forms/d/e/1FAIpQLSdxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/viewform?embedded=true"
+                src="https://docs.google.com/forms/d/e/1FAIpQLSf4z5274AkUuqcPovMZSwvP8gYMFZ-HStOTnBp3fIh6HzFjHA/viewform?embedded=true"
                 width="100%"
                 height="500"
                 frameBorder="0"
