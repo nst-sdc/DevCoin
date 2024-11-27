@@ -61,11 +61,11 @@ export default function MemberModal({ member, onClose }: MemberModalProps) {
               </a>
               
               <a
-                href={`mailto:${member.github}@example.com`}
+                href={`mailto:${member.github}@nstsdc.org`}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
               >
                 <Mail className="h-5 w-5" />
-                <span>{member.github}@example.com</span>
+                <span>{member.github}@nstsdc.org</span>
               </a>
             </div>
           </div>

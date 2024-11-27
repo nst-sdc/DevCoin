@@ -19,7 +19,7 @@ export default function Footer() {
             <Heart className="h-4 w-4 text-red-500 fill-current" />
             <span>by</span>
             <a 
-              href="https://github.com/vivek-w"
+              href="https://github.com/aryanvbw"
               target="_blank"
               rel="noopener noreferrer"
               className="text-indigo-600 hover:text-indigo-500"
