@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import CoinsPage from './pages/CoinsPage';
 import MembersPage from './pages/MembersPage';
@@ -16,9 +17,9 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen flex flex-col bg-gray-50">
           <Navbar />
-          <main className="pt-16 px-4 max-w-7xl mx-auto">
+          <main className="flex-grow pt-16 px-4 max-w-7xl mx-auto w-full">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/coins" element={<CoinsPage />} />
@@ -29,6 +30,7 @@ function App() {
               <Route path="/admin" element={<AdminPanel />} />
             </Routes>
           </main>
+          <Footer />
           <ToastContainer position="bottom-right" />
         </div>
       </Router>

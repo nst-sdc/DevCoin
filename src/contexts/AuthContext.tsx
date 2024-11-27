@@ -1,8 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
-import { signIn, signUp, signOut as firebaseSignOut } from '../services/auth';
+import { signIn, signUp, signOut as authSignOut, getCurrentSession } from '../services/auth';
 import type { User, SignInData, SignUpData, AuthState } from '../types/auth';
 
 interface AuthContextType extends AuthState {
@@ -21,36 +18,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            setState({
-              user: userDoc.data() as User,
-              loading: false,
-              error: null,
-            });
-          } else {
-            setState({
-              user: null,
-              loading: false,
-              error: 'User data not found',
-            });
-          }
-        } catch (error) {
-          setState({
-            user: null,
-            loading: false,
-            error: 'Failed to fetch user data',
-          });
-        }
-      } else {
-        setState({ user: null, loading: false, error: null });
-      }
+    const currentUser = getCurrentSession();
+    setState({
+      user: currentUser,
+      loading: false,
+      error: null,
     });
-
-    return () => unsubscribe();
   }, []);
 
   const value = {
@@ -75,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     signOut: async () => {
       try {
-        await firebaseSignOut();
+        await authSignOut();
         setState({ user: null, loading: false, error: null });
       } catch (error: any) {
         setState(prev => ({ ...prev, error: error.message }));
