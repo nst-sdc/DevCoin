@@ -74,7 +74,7 @@ export default function LeaderboardPage() {
                 <div className="text-2xl font-bold text-indigo-600">
                   {member.devCoins}
                 </div>
-                <div className="text-sm text-gray-500">CRDits</div>
+                <div className="text-sm text-gray-500">DevCoins</div>
               </div>
               
               <div className="flex-shrink-0 w-8">

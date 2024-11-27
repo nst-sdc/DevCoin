@@ -61,10 +61,10 @@ export default function CoinsPage() {
               Project Contributions
             </h3>
             <ul className="space-y-2 text-gray-600">
-              <li>• Pull Request (Merged): 50 CRDits</li>
-              <li>• Bug Fix: 30 CRDits</li>
-              <li>• Documentation: 20 CRDits</li>
-              <li>• Code Review: 15 CRDits</li>
+              <li>• Pull Request (Merged): 50 DevCoins</li>
+              <li>• Bug Fix: 30 DevCoins</li>
+              <li>• Documentation: 20 DevCoins</li>
+              <li>• Code Review: 15 DevCoins</li>
             </ul>
           </div>
           <div>
@@ -73,10 +73,10 @@ export default function CoinsPage() {
               Community Contributions
             </h3>
             <ul className="space-y-2 text-gray-600">
-              <li>• Workshop Hosting: 100 CRDits</li>
-              <li>• Event Organization: 80 CRDits</li>
-              <li>• Mentoring Sessions: 60 CRDits</li>
-              <li>• Technical Blog: 40 CRDits</li>
+              <li>• Workshop Hosting: 100 DevCoins</li>
+              <li>• Event Organization: 80 DevCoins</li>
+              <li>• Mentoring Sessions: 60 DevCoins</li>
+              <li>• Technical Blog: 40 DevCoins</li>
             </ul>
           </div>
         </div>
@@ -96,7 +96,7 @@ export default function CoinsPage() {
                     <p className="text-sm text-gray-500 mb-2">{project.description}</p>
                   </div>
                   <span className="bg-indigo-100 text-indigo-800 text-sm font-medium px-2.5 py-0.5 rounded">
-                    {project.coins} CRDits
+                    {project.coins} DevCoins
                   </span>
                 </div>
                 <a
@@ -173,7 +173,7 @@ export default function CoinsPage() {
                   <p className="text-sm text-gray-500">{member.role}</p>
                   <div className="mt-2 flex items-center space-x-4">
                     <span className="text-2xl font-bold text-indigo-600">
-                      {member.devCoins} CRDits
+                      {member.devCoins} DevCoins
                     </span>
                     <a
                       href={`https://github.com/${member.github}`}
