@@ -146,8 +146,8 @@ export default function SignInForm() {
           <div className="mt-12 pt-8 border-t border-indigo-100">
             <p className="text-sm text-gray-500 mb-4">Trusted by developers from</p>
             <div className="flex items-center space-x-6">
-              <img src="https://github.com/nst-sdc/NIRMAN-submission/releases/download/v1/NSTxADPU-white-removebg.png" alt="University Logo" className="h-8 w-auto grayscale opacity-50" />
-              <img src="https://github.com/nst-sdc/NIRMAN-submission/releases/download/v1/Dev-Club-logo.png" alt="College Logo" className="h-8 w-auto grayscale opacity-50" />
+              <img src="https://github.com/nst-sdc/NIRMAN-submission/releases/download/v1/ADYPU.png" alt="University Logo" className="h-8 w-auto grayscale opacity-50" />
+              <img src="https://github.com/nst-sdc/NIRMAN-submission/releases/download/v1/N.svg" alt="College Logo" className="h-8 w-auto grayscale opacity-50" />
             </div>
           </div>
         </div>
