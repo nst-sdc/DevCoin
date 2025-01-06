@@ -6,6 +6,7 @@ export interface User {
   linkedin?: string;
   role: 'user' | 'admin' | 'super_admin';
   avatar?: string;
+  devCoins: number;
 }
 
 export interface SignUpData {

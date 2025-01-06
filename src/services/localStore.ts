@@ -13,7 +13,8 @@ const initializeStore = () => {
       name: 'Vivek W',
       github: 'aryanvbw',
       role: 'super_admin',
-      avatar: `https://avatars.githubusercontent.com/aryanvbw`
+      avatar: `https://avatars.githubusercontent.com/aryanvbw`,
+      devCoins: 100
     };
     setUsers([superAdmin]);
   }
@@ -44,7 +45,8 @@ export const addUser = (userData: SignUpData): User => {
     github: userData.github,
     linkedin: userData.linkedin,
     role: 'user',
-    avatar: `https://avatars.githubusercontent.com/${userData.github}`
+    avatar: `https://avatars.githubusercontent.com/${userData.github}`,
+    devCoins: 0
   };
 
   setUsers([...users, newUser]);
