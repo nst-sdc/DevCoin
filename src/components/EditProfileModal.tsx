@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Upload, RefreshCw } from 'lucide-react';
 import { User } from '../types/auth';
 import { toast } from 'react-toastify';
 
@@ -16,12 +16,25 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
     github: user.github,
     linkedin: user.linkedin || '',
     email: user.email,
+    avatar: user.avatar || `https://avatars.githubusercontent.com/${user.github}`
   });
   const [loading, setLoading] = useState(false);
+  const [previewAvatar, setPreviewAvatar] = useState(user.avatar || `https://avatars.githubusercontent.com/${user.github}`);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Update avatar preview when GitHub username changes
+    if (name === 'github') {
+      const newAvatarUrl = `https://avatars.githubusercontent.com/${value}`;
+      setPreviewAvatar(newAvatarUrl);
+      setFormData(prev => ({ ...prev, avatar: newAvatarUrl }));
+    }
+    // Update avatar preview when direct avatar URL changes
+    if (name === 'avatar') {
+      setPreviewAvatar(value);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,6 +49,10 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAvatarError = () => {
+    setPreviewAvatar(`https://ui-avatars.com/api/?name=${formData.name.replace(/\s+/g, '+')}&background=random`);
   };
 
   if (!isOpen) return null;
@@ -53,6 +70,49 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
         <h2 className="text-xl font-semibold mb-6">Edit Profile</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Avatar Preview and Controls */}
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative group">
+              <img
+                src={previewAvatar}
+                alt={formData.name}
+                onError={handleAvatarError}
+                className="w-24 h-24 rounded-full border-4 border-white shadow-lg"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                <Upload className="h-6 w-6 text-white" />
+              </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  id="avatar"
+                  name="avatar"
+                  value={formData.avatar}
+                  onChange={handleChange}
+                  placeholder="Custom avatar URL"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const githubAvatar = `https://avatars.githubusercontent.com/${formData.github}`;
+                    setPreviewAvatar(githubAvatar);
+                    setFormData(prev => ({ ...prev, avatar: githubAvatar }));
+                  }}
+                  className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+                  title="Reset to GitHub avatar"
+                >
+                  <RefreshCw className="h-5 w-5" />
+                </button>
+              </div>
+              <p className="text-xs text-gray-500">
+                Enter a custom avatar URL or use your GitHub avatar
+              </p>
+            </div>
+          </div>
+
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
               Name
