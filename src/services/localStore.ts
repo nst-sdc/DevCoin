@@ -14,7 +14,9 @@ const initializeStore = () => {
       github: 'aryanvbw',
       role: 'super_admin',
       avatar: `https://avatars.githubusercontent.com/aryanvbw`,
-      devCoins: 100
+      devCoins: 100,
+      contributions: [],
+      joinedAt: new Date().toISOString()
     };
     setUsers([superAdmin]);
   }
@@ -46,10 +48,13 @@ export const addUser = (userData: SignUpData): User => {
     linkedin: userData.linkedin,
     role: 'user',
     avatar: `https://avatars.githubusercontent.com/${userData.github}`,
-    devCoins: 0
+    devCoins: 10,
+    contributions: [],
+    joinedAt: new Date().toISOString()
   };
 
-  setUsers([...users, newUser]);
+  users.push(newUser);
+  setUsers(users);
   return newUser;
 };
 

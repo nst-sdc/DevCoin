@@ -7,6 +7,17 @@ export interface User {
   role: 'user' | 'admin' | 'super_admin';
   avatar?: string;
   devCoins: number;
+  contributions: Contribution[];
+  joinedAt: string;
+}
+
+export interface Contribution {
+  id: string;
+  type: 'PR' | 'COLLAB' | 'EVENT' | 'OTHER';
+  description: string;
+  coins: number;
+  date: string;
+  verified: boolean;
 }
 
 export interface SignUpData {
