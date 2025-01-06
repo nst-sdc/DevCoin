@@ -6,23 +6,23 @@ import { mockMembers } from '../types';
 const PROJECTS = [
   {
     id: 'p1',
-    name: 'Dev Club Dashboard',
-    description: 'Track contributions and manage Dev Club activities',
-    repo: 'NST-SDC/dev-club-dashboard',
+    name: 'DevCoin',
+    description: 'Track and manage developer contributions with our innovative coin-based reward system',
+    repo: 'nst-sdc/DevCoin',
     coins: 50,
   },
   {
     id: 'p2',
-    name: 'Student Portal',
-    description: 'Centralized platform for student services',
-    repo: 'NST-SDC/student-portal',
+    name: 'DevClub Site',
+    description: 'Official website for NST Software Development Club showcasing our community and projects',
+    repo: 'nst-sdc/DevClub-Site',
     coins: 40,
   },
   {
     id: 'p3',
-    name: 'Event Manager',
-    description: 'Manage and track college events and workshops',
-    repo: 'NST-SDC/event-manager',
+    name: 'Portfolio Showcase',
+    description: 'Platform for students to showcase their projects and technical portfolios',
+    repo: 'nst-sdc/Portfolio-Showcase',
     coins: 30,
   },
 ];
