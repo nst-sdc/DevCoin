@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Github, Linkedin, Mail, Award, Calendar, Edit2 } from 'lucide-react';
+import { Github, Linkedin, Mail, Award, Calendar, Edit2, Lock } from 'lucide-react';
 import EditProfileModal from '../components/EditProfileModal';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 import { updateUserProfile } from '../services/localStore';
 import type { User } from '../types/auth';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   if (!user) {
     return (
@@ -26,14 +28,23 @@ export default function ProfilePage() {
       {/* Profile Header */}
       <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
         <div className="relative h-32 bg-gradient-to-r from-indigo-500 to-purple-600">
-          {/* Edit Profile Button */}
-          <button
-            onClick={() => setIsEditModalOpen(true)}
-            className="absolute top-4 right-4 flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-90 rounded-md text-sm font-medium text-gray-700 hover:bg-opacity-100 transition-all shadow-md"
-          >
-            <Edit2 className="h-4 w-4" />
-            <span>Edit Profile</span>
-          </button>
+          {/* Profile Actions */}
+          <div className="absolute top-4 right-4 flex items-center space-x-2">
+            <button
+              onClick={() => setIsChangePasswordModalOpen(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-90 rounded-md text-sm font-medium text-gray-700 hover:bg-opacity-100 transition-all shadow-md"
+            >
+              <Lock className="h-4 w-4" />
+              <span>Change Password</span>
+            </button>
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-90 rounded-md text-sm font-medium text-gray-700 hover:bg-opacity-100 transition-all shadow-md"
+            >
+              <Edit2 className="h-4 w-4" />
+              <span>Edit Profile</span>
+            </button>
+          </div>
           {/* Profile picture overlapping the banner */}
           <img
             src={user.avatar}
@@ -124,6 +135,12 @@ export default function ProfilePage() {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         onUpdate={handleUpdateProfile}
+      />
+      
+      <ChangePasswordModal
+        user={user}
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
       />
     </div>
   );
