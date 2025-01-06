@@ -9,7 +9,7 @@
 This is the deployment repository for the Dev Club Portal, optimized for Vercel deployment. For contributing to the project, please visit our [organization repository](https://github.com/nst-sdc/DevCoin).
 
 ### 🔗 Important Links
-- 🌐 [Live Demo](https://portal-aryanvbw.vercel.app/)
+- 🌐 [Live Demo](https://portal-cyan-alpha.vercel.app/)
 - 🏢 [Organization Repo](https://github.com/nst-sdc/DevCoin)
 - 📚 [Documentation](./PROJECT_DOCUMENTATION.md)
 - 📋 [Latest Release Notes](./RELEASE_v1.1.0.md)
