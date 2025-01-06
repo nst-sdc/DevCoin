@@ -12,6 +12,7 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import SignInForm from './components/auth/SignInForm';
 import SignUpForm from './components/auth/SignUpForm';
 import AdminPanel from './components/admin/AdminPanel';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
               <Route path="/signin" element={<SignInForm />} />
               <Route path="/signup" element={<SignUpForm />} />
               <Route path="/admin" element={<AdminPanel />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Routes>
           </main>
           <Footer />

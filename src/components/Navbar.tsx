@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code2, Users, Trophy, Home, LogIn, LogOut, UserPlus } from 'lucide-react';
+import { Code2, Users, Trophy, Home, LogIn, LogOut, UserPlus, User } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
@@ -49,6 +49,16 @@ export default function Navbar() {
                       active={isActive('/admin')} 
                     />
                   ) : null}
+                  <Link
+                    to="/profile"
+                    className="flex items-center space-x-2"
+                  >
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="h-8 w-8 rounded-full border-2 border-indigo-200 hover:border-indigo-400 transition-colors"
+                    />
+                  </Link>
                   <button
                     onClick={handleSignOut}
                     className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"

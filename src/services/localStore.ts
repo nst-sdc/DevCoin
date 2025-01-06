@@ -102,5 +102,35 @@ export const updateUserPassword = (userId: string, newPassword: string): void =>
   setUsers(users);
 };
 
+export const updateUserProfile = (userId: string, userData: Partial<User>): User => {
+  const users = getUsers();
+  const userIndex = users.findIndex(u => u.id === userId);
+  
+  if (userIndex === -1) {
+    throw new Error('User not found');
+  }
+
+  // Update user data while preserving existing fields
+  const updatedUser = { 
+    ...users[userIndex],
+    ...userData,
+    // Preserve these fields
+    id: users[userIndex].id,
+    role: users[userIndex].role,
+    devCoins: users[userIndex].devCoins
+  };
+
+  users[userIndex] = updatedUser;
+  setUsers(users);
+
+  // Update current user if it's the same user
+  const currentUser = getCurrentUser();
+  if (currentUser && currentUser.id === userId) {
+    setCurrentUser(updatedUser);
+  }
+
+  return updatedUser;
+};
+
 // Initialize store with super admin
 initializeStore();
