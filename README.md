@@ -1,6 +1,6 @@
 # Dev Club Portal 🚀
 
-[![Deployment Status](https://img.shields.io/badge/deployment-live-success)](https://portal-aryanvbw.vercel.app/)
+[![Deployment Status](https://img.shields.io/badge/deployment-live-success)](https://www.nstsdc.org/)
 [![Version](https://img.shields.io/badge/version-1.1.0-blue)](https://github.com/AryanVBW/Portal/releases)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
