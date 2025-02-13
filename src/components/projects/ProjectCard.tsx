@@ -11,16 +11,16 @@ interface ProjectCardProps {
 
 export default function ProjectCard({ project, onAssign, isAssigned }: ProjectCardProps) {
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+    <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="text-xl font-semibold text-gray-900 hover:text-indigo-600">
+            <h3 className="text-xl font-semibold text-white hover:text-indigo-600">
               <a href={project.url} target="_blank" rel="noopener noreferrer">
                 {project.name}
               </a>
             </h3>
-            <p className="text-gray-500 mt-1">{project.description}</p>
+            <p className="text-gray-200 mt-1">{project.description}</p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center text-yellow-500">
@@ -34,7 +34,7 @@ export default function ProjectCard({ project, onAssign, isAssigned }: ProjectCa
           </div>
         </div>
 
-        <div className="flex items-center space-x-4 text-sm text-gray-500 mb-4">
+        <div className="flex items-center space-x-4 text-sm text-emerald-500 mb-4">
           <div className="flex items-center">
             <Code className="h-4 w-4 mr-1" />
             <span>{project.language}</span>
@@ -47,7 +47,7 @@ export default function ProjectCard({ project, onAssign, isAssigned }: ProjectCa
 
         {project.pullRequests.length > 0 && (
           <div className="border-t pt-4 mt-4">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Recent Pull Requests</h4>
+            <h4 className="text-sm font-medium text-orange-600 mb-2">Recent Pull Requests</h4>
             <div className="space-y-2">
               {project.pullRequests.slice(0, 3).map(pr => (
                 <a
@@ -55,10 +55,10 @@ export default function ProjectCard({ project, onAssign, isAssigned }: ProjectCa
                   href={pr.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block hover:bg-gray-50 rounded p-2 -mx-2"
+                  className="block hover:bg-cyan-800 rounded p-2 -mx-2"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700">{pr.title}</span>
+                    <span className="text-sm text-gray-200">{pr.title}</span>
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       pr.status === 'merged' ? 'bg-purple-100 text-purple-800' :
                       pr.status === 'open' ? 'bg-green-100 text-green-800' :
@@ -67,7 +67,7 @@ export default function ProjectCard({ project, onAssign, isAssigned }: ProjectCa
                       {pr.status}
                     </span>
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-cyan-500 mt-1">
                     by {pr.author} • {formatDistanceToNow(new Date(pr.createdAt))} ago
                   </div>
                 </a>
