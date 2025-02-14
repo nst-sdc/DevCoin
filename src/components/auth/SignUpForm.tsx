@@ -34,11 +34,11 @@ export default function SignUpForm() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Features */}
-      <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-indigo-500 to-purple-600">
-        <div className="w-full max-w-2xl mx-auto px-8 py-24 flex flex-col justify-center text-white">
+      <div className="hidden lg:flex lg:flex-1npm bg-indigo-50">
+        <div className="w-full max-w-2xl mx-auto px-8 py-24 flex flex-col justify-center text-gray-900">
           <h2 className="text-4xl font-bold mb-8">Build Your Developer Profile</h2>
           
-          <div className="space-y-8">
+          <div className="space-y-8  text-gray-100" >
             <FeatureLeft
               title="Showcase Your Skills"
               description="Create a comprehensive profile highlighting your technical expertise and contributions."
@@ -58,7 +58,7 @@ export default function SignUpForm() {
               {[1, 2, 3].map((i) => (
                 <div key={i} className="bg-white/10 p-4 rounded-lg backdrop-blur-sm">
                   <div className="text-2xl font-bold mb-1">5+</div>
-                  <div className="text-sm text-white/80">Active Projects</div>
+                  <div className="text-sm text-gray-800">Active Projects</div>
                 </div>
               ))}
             </div>
@@ -67,15 +67,15 @@ export default function SignUpForm() {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <Link to="/" className="flex items-center justify-center space-x-2 mb-6">
               <Code2 className="h-10 w-10 text-indigo-600" />
-              <span className="text-2xl font-bold text-gray-900">Dev Club</span>
+              <span className="text-2xl font-bold text-white">Dev Club</span>
             </Link>
-            <h2 className="text-3xl font-extrabold text-gray-900">Create your account</h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <h2 className="text-3xl font-extrabold text-white">Create your account</h2>
+            <p className="mt-2 text-sm text-indigo-100">
               Already have an account?{' '}
               <Link to="/signin" className="font-medium text-indigo-600 hover:text-indigo-500">
                 Sign in
@@ -86,7 +86,7 @@ export default function SignUpForm() {
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="name" className="block text-sm font-medium text-indigo-200">
                   Full Name
                 </label>
                 <div className="mt-1 relative">
@@ -107,7 +107,7 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-indigo-200">
                   Email address
                 </label>
                 <div className="mt-1 relative">
@@ -128,7 +128,7 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <label htmlFor="github" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="github" className="block text-sm font-medium text-indigo-200">
                   GitHub Username
                 </label>
                 <div className="mt-1 relative">
@@ -149,7 +149,7 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <label htmlFor="linkedin" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="linkedin" className="block text-sm font-medium text-indigo-200">
                   LinkedIn Profile URL
                 </label>
                 <div className="mt-1 relative">
@@ -169,7 +169,7 @@ export default function SignUpForm() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="block text-sm font-medium text-indigo-200">
                   Password
                 </label>
                 <div className="mt-1 relative">
@@ -228,13 +228,13 @@ function FeatureLeft({ title, description }: { title: string; description: strin
   return (
     <div className="flex items-start space-x-4">
       <div className="flex-shrink-0 mt-1">
-        <div className="flex items-center justify-center h-8 w-8 rounded-md bg-white/10 text-white">
+        <div className="flex items-center justify-center h-8 w-8 rounded-md bg-indigo-500 text-white">
           <ArrowRight className="h-5 w-5" />
         </div>
       </div>
       <div>
-        <h3 className="text-lg font-medium text-white">{title}</h3>
-        <p className="mt-1 text-sm text-white/80">{description}</p>
+        <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+        <p className="mt-1 text-sm text-gray-500">{description}</p>
       </div>
     </div>
   );

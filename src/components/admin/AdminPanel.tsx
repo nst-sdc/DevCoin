@@ -73,8 +73,8 @@ export default function AdminPanel() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage contributions, users, and system settings</p>
+          <h1 className="text-3xl font-bold text-white mb-1">Admin Dashboard</h1>
+          <p className="text text-gray-200">Manage contributions, users, and system settings</p>
         </div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2 bg-indigo-50 px-4 py-2 rounded-lg">
@@ -95,32 +95,32 @@ export default function AdminPanel() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Pending Contributions</p>
-              <p className="text-2xl font-bold text-gray-900">{pendingContributions.length}</p>
+              <p className="text-gray-200 text-sm">Pending Contributions</p>
+              <p className="text-2xl font-bold text-white">{pendingContributions.length}</p>
             </div>
             <div className="p-3 bg-indigo-50 rounded-lg">
               <GitPullRequest className="h-6 w-6 text-indigo-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+              <p className="text-gray-200 text-sm">Total Users</p>
+              <p className="text-2xl font-bold text-white">{users.length}</p>
             </div>
             <div className="p-3 bg-green-50 rounded-lg">
               <Users className="h-6 w-6 text-green-600" />
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">System Status</p>
+              <p className="text-gray-200 text-sm">System Status</p>
               <p className="text-2xl font-bold text-emerald-600">Active</p>
             </div>
             <div className="p-3 bg-emerald-50 rounded-lg">
@@ -132,9 +132,9 @@ export default function AdminPanel() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Pending Contributions */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-sm p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold flex items-center">
+            <h2 className="text-xl font-semibold flex items-center text-gray-200">
               <GitPullRequest className="h-5 w-5 mr-2 text-indigo-600" />
               Pending Contributions
             </h2>
@@ -142,17 +142,17 @@ export default function AdminPanel() {
               <div className="relative">
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+                  className="p-2 text-gray-500 hover:text-gray-200 transition-colors"
                 >
                   <Filter className="h-5 w-5" />
                 </button>
                 {showFilters && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 z-10">
+                  <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-10">
                     <div className="p-2">
                       <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="w-full p-2 border border-gray-200 rounded-lg"
+                        className="w-full p-2 rounded-lg bg-slate-200 text-gray-700"
                       >
                         <option value="all">All Types</option>
                         <option value="pr">Pull Requests</option>
@@ -179,10 +179,10 @@ export default function AdminPanel() {
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                <p className="text-gray-500 mt-2">Loading contributions...</p>
+                <p className="text-gray-300 mt-2">Loading contributions...</p>
               </div>
             ) : pendingContributions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-300">
                 No pending contributions
               </div>
             ) : (
@@ -234,9 +234,9 @@ export default function AdminPanel() {
         </div>
 
         {/* User Management */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-sm p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold flex items-center">
+            <h2 className="text-xl font-semibold flex items-center text-gray-200">
               <Users className="h-5 w-5 mr-2 text-indigo-600" />
               User Management
             </h2>
@@ -253,7 +253,7 @@ export default function AdminPanel() {
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                <p className="text-gray-500 mt-2">Loading users...</p>
+                <p className="text-gray-300 mt-2">Loading users...</p>
               </div>
             ) : users.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
@@ -298,34 +298,34 @@ export default function AdminPanel() {
 
         {/* System Settings */}
         {user?.role === 'super_admin' && (
-          <div className="bg-white rounded-xl shadow-sm p-6 lg:col-span-2">
-            <h2 className="text-xl font-semibold mb-6 flex items-center">
+          <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-sm p-6 lg:col-span-2">
+            <h2 className="text-xl font-semibold mb-6 flex items-center text-gray-200">
               <Settings className="h-5 w-5 mr-2 text-indigo-600" />
               System Settings
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h3 className="font-medium text-gray-900">General Settings</h3>
+                <h3 className="font-medium text-gray-300">General Settings</h3>
                 <div className="space-y-2">
                   <label className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded text-indigo-600" />
-                    <span className="text-gray-700">Enable email notifications</span>
+                    <span className="text-gray-300">Enable email notifications</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded text-indigo-600" />
-                    <span className="text-gray-700">Allow public contributions</span>
+                    <span className="text-gray-300">Allow public contributions</span>
                   </label>
                   <label className="flex items-center space-x-2">
                     <input type="checkbox" className="rounded text-indigo-600" />
-                    <span className="text-gray-700">Require approval for all contributions</span>
+                    <span className="text-gray-300">Require approval for all contributions</span>
                   </label>
                 </div>
               </div>
               <div className="space-y-4">
-                <h3 className="font-medium text-gray-900">Advanced Settings</h3>
+                <h3 className="font-medium text-gray-300">Advanced Settings</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
                       Maximum contribution size
                     </label>
                     <select className="w-full p-2 border border-gray-200 rounded-lg">
@@ -335,7 +335,7 @@ export default function AdminPanel() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
                       Auto-approval threshold
                     </label>
                     <select className="w-full p-2 border border-gray-200 rounded-lg">

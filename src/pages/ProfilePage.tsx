@@ -26,8 +26,8 @@ export default function ProfilePage() {
   return (
     <div className="py-8 px-4 max-w-4xl mx-auto">
       {/* Profile Header */}
-      <div className="bg-white rounded-xl shadow-md overflow-hidden mb-8">
-        <div className="relative h-32 bg-gradient-to-r from-indigo-500 to-purple-600">
+      <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-md overflow-hidden mb-8">
+        <div className="relative h-32 bg-gradient-to-r from-teal-200 to-emerald-200">
           {/* Profile Actions */}
           <div className="absolute top-4 right-4 flex items-center space-x-2">
             <button
@@ -55,7 +55,7 @@ export default function ProfilePage() {
         <div className="pt-16 pb-8 px-8">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
+              <h1 className="text-2xl font-bold text-gray-100">{user.name}</h1>
               <p className="text-gray-600 capitalize">{user.role}</p>
             </div>
             <div className="flex items-center space-x-2">
@@ -69,12 +69,12 @@ export default function ProfilePage() {
       {/* Profile Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Contact Information */}
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <Mail className="h-5 w-5 text-gray-500" />
-              <span className="text-gray-700">{user.email}</span>
+              <span className="text-gray-100">{user.email}</span>
             </div>
             {user.github && (
               <div className="flex items-center space-x-3">
@@ -83,7 +83,7 @@ export default function ProfilePage() {
                   href={`https://github.com/${user.github}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-600 hover:text-indigo-800"
+                  className="text-indigo-100 hover:text-indigo-500"
                 >
                   @{user.github}
                 </a>
@@ -106,7 +106,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Contributions & Activity */}
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">Contributions & Activity</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-2 border-b">
