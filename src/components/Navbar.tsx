@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code2, Users, Trophy, Home, LogIn, LogOut, UserPlus, User, FolderGit2, InfoIcon } from 'lucide-react';
+import { Code2, Users, Trophy, Home, LogIn, LogOut, UserPlus, User, FolderGit2 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
@@ -39,7 +39,7 @@ export default function Navbar() {
             <NavLinkMobile to="/coins" icon={<Code2 className="w-4 h-4" />} text="Dev Coins" active={isActive('/coins')} />
             <NavLinkMobile to="/members" icon={<Users className="w-4 h-4" />} text="Members" active={isActive('/members')} />
             <NavLinkMobile to="/leaderboard" icon={<Trophy className="w-4 h-4" />} text="Leaderboard" active={isActive('/leaderboard')} />
-            <NavLinkMobile to="/about" icon={<InfoIcon className="w-4 h-4" />} text="About Us" active={isActive('/about')} />
+            <NavLinkMobile to="https://recruitment.nstsdc.org/" icon={<UserPlus className="w-4 h-4" />} text="Recruitment" active={isActive('/recruitment')} />
           </ul>
         </div>
         <Link to="/" className="btn btn-ghost normal-case text-xl gap-2 ml-2">
@@ -55,7 +55,7 @@ export default function Navbar() {
           <NavLink to="/coins" icon={<Code2 className="w-4 h-4" />} text="Dev Coins" active={isActive('/coins')} />
           <NavLink to="/members" icon={<Users className="w-4 h-4" />} text="Members" active={isActive('/members')} />
           <NavLink to="/leaderboard" icon={<Trophy className="w-4 h-4" />} text="Leaderboard" active={isActive('/leaderboard')} />
-          <NavLink to="/about" icon={<InfoIcon className="w-4 h-4" />} text="About Us" active={isActive('/about')} />
+          <NavLink to="https://recruitment.nstsdc.org/" icon={<UserPlus className="w-4 h-4" />} text="Recruitment" active={isActive('recruitment')} />
         </ul>
       </div>
       

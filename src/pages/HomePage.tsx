@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code2, FolderKanban, Github, Terminal } from 'lucide-react';
+import { Code2, FolderKanban, Github, Terminal, UserPlus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function HomePage() {
@@ -86,7 +86,16 @@ export default function HomePage() {
           Learn modern technologies, build amazing projects, and grow your skills with like-minded developers.
         </p>
         <div className="flex gap-6 flex-wrap justify-center lg:justify-start">
-          <Link to="/signup" className="btn btn-primary">Get Started</Link>
+        <a 
+            href="https://recruitment.nstsdc.org/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="btn btn-primary"
+          >
+            <UserPlus className="w-5 h-5 mr-2" />
+            Join
+          </a>
+
           <a 
             href="https://github.com/nst-sdc" 
             target="_blank" 
