@@ -13,8 +13,74 @@ export const initiateGithubLogin = () => {
 
 export const handleGithubCallback = async (code: string): Promise<User> => {
   try {
-    // Exchange code for access token using production endpoint
-    const response = await fetch('https://www.nstsdc.org/api/github/callback', {
+    // Exchange code for access token
+    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        client_secret: import.meta.env.VITE_GITHUB_CLIENT_SECRET,
+        code,
+      }),
+    });
+
+    const { access_token } = await tokenResponse.json();
+
+    if (!access_token) {
+      throw new Error('Failed to get access token from GitHub');
+    }
+
+    // Get user info from GitHub
+    const userResponse = await fetch('https://api.github.com/user', {
+      headers: {
+        'Authorization': `Bearer ${access_token}`,
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!userResponse.ok) {
+      throw new Error('Failed to get user info from GitHub');
+    }
+
+    const githubUser = await userResponse.json();
+
+    // Get user's email from GitHub
+    const emailResponse = await fetch('https://api.github.com/user/emails', {
+      headers: {
+        'Authorization': `Bearer ${access_token}`,
+        'Accept': 'application/json',
+      },
+    });
+
+    const emails = await emailResponse.json();
+    const primaryEmail = emails.find((email: any) => email.primary)?.email || githubUser.email;
+
+    // Create user object with GitHub data
+    const user: User = {
+      id: `github_${githubUser.id}`,
+      email: primaryEmail,
+      name: githubUser.name || githubUser.login,
+      github: githubUser.html_url,
+      githubUsername: githubUser.login,
+      githubId: githubUser.id.toString(),
+      githubAccessToken: access_token,
+      role: 'user',
+      avatar: githubUser.avatar_url,
+      bio: githubUser.bio,
+      location: githubUser.location,
+      company: githubUser.company,
+      blog: githubUser.blog,
+      devCoins: 0,
+      contributions: [],
+      joinedAt: new Date().toISOString(),
+    };
+
+    // Store user data
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    return user;
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

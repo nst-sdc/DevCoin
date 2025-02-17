@@ -3,12 +3,19 @@ export interface User {
   email: string;
   name: string;
   github: string;
+  githubUsername?: string;
+  githubId?: string;
+  githubAccessToken?: string;
   linkedin?: string;
   role: 'user' | 'admin' | 'super_admin';
   avatar?: string;
   devCoins: number;
   contributions: Contribution[];
   joinedAt: string;
+  bio?: string;
+  location?: string;
+  company?: string;
+  blog?: string;
 }
 
 export interface Contribution {
