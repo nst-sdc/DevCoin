@@ -15,6 +15,7 @@ import AdminPanel from './components/admin/AdminPanel';
 import ProfilePage from './pages/ProfilePage';
 import ProjectPage from './pages/ProjectPage';
 import BackgroundLayout from './components/common/BackgroundLayout';
+import AboutPage from './pages/AboutPage';
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
                 <Route path="/signup" element={<SignUpForm />} />
                 <Route path="/admin" element={<AdminPanel />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/about" element={<AboutPage />} />
               </Routes>
             </main>
             <Footer />
