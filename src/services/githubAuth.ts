@@ -81,24 +81,6 @@ export const handleGithubCallback = async (code: string): Promise<User> => {
     // Store user data
     localStorage.setItem('currentUser', JSON.stringify(user));
     return user;
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ code }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to authenticate with GitHub');
-    }
-
-    const data = await response.json();
-    const { access_token } = data;
-
-    // Get user info from GitHub
-    const userResponse = await fetch('https://api.github.com/user', {
-      headers: {
-        Authorization: `Bearer ${access_token}`,
       },
     });
 
