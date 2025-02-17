@@ -5,14 +5,16 @@ const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID;
 const GITHUB_REDIRECT_URI = import.meta.env.VITE_GITHUB_REDIRECT_URI;
 
 export const initiateGithubLogin = () => {
-  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${GITHUB_REDIRECT_URI}&scope=user:email`;
+  // Production configuration for nstsdc.org
+  const encodedRedirectUri = encodeURIComponent(GITHUB_REDIRECT_URI);
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodedRedirectUri}&scope=user:email,read:user,user:follow`;
   window.location.href = githubAuthUrl;
 };
 
 export const handleGithubCallback = async (code: string): Promise<User> => {
   try {
-    // Exchange code for access token
-    const response = await fetch('/api/github/callback', {
+    // Exchange code for access token using production endpoint
+    const response = await fetch('https://www.nstsdc.org/api/github/callback', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
