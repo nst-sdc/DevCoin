@@ -3,7 +3,15 @@ import { Trophy, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function LeaderboardPage() {
+  const [timeFrame, setTimeFrame] = useState<'all' | 'month' | 'week'>('all');
+  const [animateRank, setAnimateRank] = useState(false);
   const [members, setMembers] = useState<any[]>([]);
+
+  useEffect(() => {
+    setAnimateRank(true);
+    const timer = setTimeout(() => setAnimateRank(false), 500);
+    return () => clearTimeout(timer);
+  }, [timeFrame]);
 
   useEffect(() => {
     async function fetchMembers() {
@@ -17,7 +25,7 @@ export default function LeaderboardPage() {
       }
     }
     fetchMembers();
-  }, []);
+  }, [timeFrame]);
 
   const sortedMembers = [...members].sort((a, b) => b.dev_coins - a.dev_coins);
 
@@ -25,12 +33,34 @@ export default function LeaderboardPage() {
     <div className="py-8">
       <div className="text-center mb-12">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Dev Club Leaderboard</h1>
+        <div className="flex justify-center space-x-4">
+          <TimeFrameButton
+            active={timeFrame === 'all'}
+            onClick={() => setTimeFrame('all')}
+          >
+            All Time
+          </TimeFrameButton>
+          <TimeFrameButton
+            active={timeFrame === 'month'}
+            onClick={() => setTimeFrame('month')}
+          >
+            This Month
+          </TimeFrameButton>
+          <TimeFrameButton
+            active={timeFrame === 'week'}
+            onClick={() => setTimeFrame('week')}
+          >
+            This Week
+          </TimeFrameButton>
+        </div>
       </div>
       <div className="max-w-3xl mx-auto">
         {sortedMembers.map((member, index) => (
           <div
             key={member.id}
-            className="bg-white rounded-xl shadow-md mb-4 translate-y-0 opacity-100 transition-all duration-300"
+            className={`bg-white rounded-xl shadow-md mb-4 transform transition-all duration-300 ${
+              animateRank ? 'translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
+            }`}
             style={{ transitionDelay: `${index * 100}ms` }}
           >
             <div className="p-6 flex items-center space-x-4">
@@ -77,5 +107,28 @@ export default function LeaderboardPage() {
         ))}
       </div>
     </div>
+  );
+}
+
+function TimeFrameButton({ 
+  active, 
+  onClick, 
+  children 
+}: { 
+  active: boolean; 
+  onClick: () => void; 
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 rounded-lg transition-colors ${
+        active
+          ? 'bg-indigo-600 text-white'
+          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      }`}
+    >
+      {children}
+    </button>
   );
 }
