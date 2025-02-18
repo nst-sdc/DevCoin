@@ -41,31 +41,46 @@ export default function Navbar() {
             <div className="flex items-center space-x-4">
               {user ? (
                 <div className="flex items-center space-x-4">
-                  {user.role === 'admin' || user.role === 'super_admin' ? (
+                  {user.is_admin && (
                     <NavLink 
                       to="/admin" 
                       icon={<Code2 />} 
                       text="Admin" 
                       active={isActive('/admin')} 
                     />
-                  ) : null}
-                  <Link
-                    to="/profile"
-                    className="flex items-center space-x-2"
-                  >
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="h-8 w-8 rounded-full border-2 border-indigo-200 hover:border-indigo-400 transition-colors"
-                    />
-                  </Link>
-                  <button
-                    onClick={handleSignOut}
-                    className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Sign Out</span>
-                  </button>
+                  )}
+                  <div className="flex items-center space-x-4">
+                    <Link
+                      to="/profile"
+                      className="flex items-center space-x-2 group"
+                    >
+                      {user.avatar_url ? (
+                        <img
+                          src={user.avatar_url}
+                          alt={user.github_username || user.email}
+                          className="h-8 w-8 rounded-full border-2 border-indigo-200 group-hover:border-indigo-400 transition-colors"
+                        />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center border-2 border-indigo-200 group-hover:border-indigo-400 transition-colors">
+                          <User className="h-4 w-4 text-indigo-600" />
+                        </div>
+                      )}
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-indigo-600 transition-colors">
+                        {user.github_username || user.email.split('@')[0]}
+                      </span>
+                    </Link>
+                    <div className="flex items-center text-sm font-medium text-gray-500">
+                      <Trophy className="h-4 w-4 text-yellow-500 mr-1" />
+                      {user.dev_coins} coins
+                    </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex items-center space-x-4">
