@@ -1,11 +1,34 @@
-import { SignUpData, SignInData, User } from '../types/auth';
-import { addUser, getUsers, getCurrentUser, setCurrentUser } from './localStore';
+import { SignUpData, SignInData } from '../types/auth';
+import { supabase, type User } from '../lib/supabase';
 
-export const signUp = async (data: SignUpData): Promise<User> => {
+export const signUp = async ({ email, password, github_username }: SignUpData): Promise<User> => {
   try {
-    const newUser = addUser(data);
-    setCurrentUser(newUser);
-    return newUser;
+    const { data: { user }, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+    if (!user) throw new Error('No user returned after signup');
+
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .insert([
+        {
+          id: user.id,
+          email,
+          github_username,
+          dev_coins: 0,
+          is_admin: false,
+        },
+      ])
+      .select()
+      .single();
+
+    if (profileError) throw profileError;
+    if (!profile) throw new Error('Failed to create user profile');
+
+    return profile;
   } catch (error: any) {
     throw new Error(error.message);
   }
@@ -13,83 +36,59 @@ export const signUp = async (data: SignUpData): Promise<User> => {
 
 export const signIn = async ({ email, password }: SignInData): Promise<User> => {
   try {
-    const users = getUsers();
-    const user = users.find(u => u.email === email);
+    const { data: { user }, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (!user) {
-      throw new Error('User not found');
-    }
+    if (error) throw error;
+    if (!user) throw new Error('No user returned after login');
 
-    // In a real app, you'd verify the hashed password
-    // For demo purposes, we're allowing any password for the super admin
-    if (email === 'vivek.aryanvbw@gmail.com' && password === 'Vivek@2024') {
-      setCurrentUser(user);
-      return user;
-    }
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
-    // For other users, check if they exist (we're not storing passwords in this demo)
-    if (user) {
-      setCurrentUser(user);
-      return user;
-    }
+    if (profileError) throw profileError;
+    if (!profile) throw new Error('User profile not found');
 
-    throw new Error('Invalid credentials');
+    return profile;
   } catch (error: any) {
     throw new Error(error.message);
   }
 };
 
 export const signOut = async (): Promise<void> => {
-  setCurrentUser(null);
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
 };
 
-export const getCurrentSession = (): User | null => {
-  return getCurrentUser();
+export const getCurrentSession = async (): Promise<User | null> => {
+  const { data: { session }, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  if (!session) return null;
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', session.user.id)
+    .single();
+
+  return profile || null;
 };
 
-export const changePassword = async (userId: string, currentPassword: string, newPassword: string): Promise<void> => {
+export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
   try {
-    const users = getUsers();
-    const user = users.find(u => u.id === userId);
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    // For demo purposes, we're only checking the super admin's password
-    if (user.email === 'vivek.aryanvbw@gmail.com' && currentPassword !== 'Vivek@2024') {
-      throw new Error('Current password is incorrect');
-    }
-
-    // In a real app, you would:
-    // 1. Verify the current password hash matches
-    // 2. Hash the new password
-    // 3. Update the password in the database
-    
-    // For this demo, we'll just validate the password format
     if (newPassword.length < 8) {
       throw new Error('Password must be at least 8 characters long');
     }
 
-    if (!/[A-Z]/.test(newPassword)) {
-      throw new Error('Password must contain at least one uppercase letter');
-    }
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
 
-    if (!/[0-9]/.test(newPassword)) {
-      throw new Error('Password must contain at least one number');
-    }
-
-    if (!/[!@#$%^&*]/.test(newPassword)) {
-      throw new Error('Password must contain at least one special character (!@#$%^&*)');
-    }
-
-    // Update the password (in a real app, this would be hashed)
-    if (user.email === 'vivek.aryanvbw@gmail.com') {
-      // For demo purposes, we're only actually changing the super admin's password
-      user.password = newPassword;
-      const updatedUsers = users.map(u => u.id === userId ? user : u);
-      localStorage.setItem('users', JSON.stringify(updatedUsers));
-    }
+    if (error) throw error;
   } catch (error: any) {
     throw new Error(error.message);
   }
