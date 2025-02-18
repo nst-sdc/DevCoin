@@ -3,14 +3,23 @@ import { supabase, type User } from '../lib/supabase';
 
 export const signUp = async ({ email, password, github_username }: SignUpData): Promise<User> => {
   try {
-    const { data: { user }, error } = await supabase.auth.signUp({
+    // First sign up the user with Supabase Auth
+    const { data: { user }, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    if (error) throw error;
+    if (signUpError) throw signUpError;
     if (!user) throw new Error('No user returned after signup');
 
+    // Wait a short moment for the auth session to be established
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Get the session to ensure we're authenticated
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Failed to establish session');
+
+    // Now create the user profile
     const { data: profile, error: profileError } = await supabase
       .from('users')
       .insert([
@@ -25,11 +34,16 @@ export const signUp = async ({ email, password, github_username }: SignUpData): 
       .select()
       .single();
 
-    if (profileError) throw profileError;
-    if (!profile) throw new Error('Failed to create user profile');
+    if (profileError) {
+      console.error('Profile creation error:', profileError);
+      throw new Error('Failed to create user profile');
+    }
+
+    if (!profile) throw new Error('No profile returned after creation');
 
     return profile;
   } catch (error: any) {
+    console.error('Signup error:', error);
     throw new Error(error.message);
   }
 };
@@ -49,6 +63,27 @@ export const signIn = async ({ email, password }: SignInData): Promise<User> => 
       .select('*')
       .eq('id', user.id)
       .single();
+
+    // If no profile exists (PGRST116) but we have a valid user, create the profile
+    if (profileError && profileError.code === 'PGRST116') {
+      const { data: newProfile, error: createError } = await supabase
+        .from('users')
+        .insert([
+          {
+            id: user.id,
+            email: user.email,
+            dev_coins: 0,
+            is_admin: false,
+          },
+        ])
+        .select()
+        .single();
+
+      if (createError) throw createError;
+      if (!newProfile) throw new Error('Failed to create user profile');
+      
+      return newProfile;
+    }
 
     if (profileError) throw profileError;
     if (!profile) throw new Error('User profile not found');
