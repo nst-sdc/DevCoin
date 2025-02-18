@@ -1,16 +1,42 @@
 import { SignUpData, SignInData } from '../types/auth';
 import { supabase, type User } from '../lib/supabase';
+import { Provider } from '@supabase/supabase-js';
 
-export const signUp = async ({ email, password, github_username }: SignUpData): Promise<User> => {
+export const signUp = async (userData: SignUpData): Promise<User> => {
   try {
     // First sign up the user with Supabase Auth
     const { data: { user }, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
+      email: userData.email,
+      password: userData.password,
+      options: {
+        data: {
+          full_name: userData.full_name,
+          github_username: userData.github_username,
+          linkedin_url: userData.linkedin_url,
+          avatar_url: userData.avatar_url
+        }
+      }
     });
 
     if (signUpError) throw signUpError;
     if (!user) throw new Error('No user returned after signup');
+
+    // Insert the user profile data into the profiles table
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({
+        id: user.id,
+        email: userData.email,
+        full_name: userData.full_name,
+        github_username: userData.github_username,
+        linkedin_url: userData.linkedin_url,
+        avatar_url: userData.avatar_url,
+        dev_coins: 0,
+        is_admin: false,
+        created_at: new Date().toISOString()
+      });
+
+    if (profileError) throw profileError;
 
     // Wait a short moment for the auth session to be established
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -91,6 +117,23 @@ export const signIn = async ({ email, password }: SignInData): Promise<User> => 
     return profile;
   } catch (error: any) {
     throw new Error(error.message);
+  }
+};
+
+export const signInWithGitHub = async (): Promise<void> => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error signing in with GitHub:', error);
+    throw error;
   }
 };
 

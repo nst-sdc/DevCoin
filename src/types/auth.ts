@@ -11,7 +11,10 @@ export interface User {
 export interface SignUpData {
   email: string;
   password: string;
-  github_username?: string;
+  github_username: string;
+  full_name: string;
+  linkedin_url?: string;
+  avatar_url?: string;
 }
 
 export interface SignInData {
