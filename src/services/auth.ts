@@ -45,29 +45,20 @@ export const signUp = async (userData: SignUpData): Promise<User> => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw new Error('Failed to establish session');
 
-    // Now create the user profile
-    const { data: profile, error: profileError } = await supabase
-      .from('users')
-      .insert([
-        {
-          id: user.id,
-          email,
-          github_username,
-          dev_coins: 0,
-          is_admin: false,
-        },
-      ])
-      .select()
-      .single();
 
-    if (profileError) {
-      console.error('Profile creation error:', profileError);
-      throw new Error('Failed to create user profile');
-    }
 
-    if (!profile) throw new Error('No profile returned after creation');
-
-    return profile;
+    // Return the user data
+    return {
+      id: user.id,
+      email: userData.email,
+      github_username: userData.github_username,
+      full_name: userData.full_name,
+      linkedin_url: userData.linkedin_url,
+      avatar_url: userData.avatar_url,
+      dev_coins: 0,
+      is_admin: false,
+      created_at: new Date().toISOString()
+    };
   } catch (error: any) {
     console.error('Signup error:', error);
     throw new Error(error.message);
