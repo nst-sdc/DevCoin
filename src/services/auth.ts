@@ -65,17 +65,55 @@ export const signOut = async (): Promise<void> => {
 };
 
 export const getCurrentSession = async (): Promise<User | null> => {
-  const { data: { session }, error } = await supabase.auth.getSession();
-  if (error) throw error;
-  if (!session) return null;
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    if (!session) return null;
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', session.user.id)
-    .single();
+    const { data: profile, error: profileError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
 
-  return profile || null;
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+      return null;
+    }
+
+    if (!profile) {
+      // If no profile exists but we have a session, create one
+      if (session.user.app_metadata.provider === 'github') {
+        const { data: newProfile, error: createError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: session.user.id,
+              email: session.user.email,
+              github_username: session.user.user_metadata.user_name,
+              avatar_url: session.user.user_metadata.avatar_url,
+              dev_coins: 0,
+              is_admin: false,
+            },
+          ])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating user profile:', createError);
+          return null;
+        }
+
+        return newProfile;
+      }
+      return null;
+    }
+
+    return profile;
+  } catch (error) {
+    console.error('Error in getCurrentSession:', error);
+    return null;
+  }
 };
 
 export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
