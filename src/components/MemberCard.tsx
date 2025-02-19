@@ -11,7 +11,7 @@ export default function MemberCard({ member, onClick }: MemberCardProps) {
   return (
     <div 
       onClick={onClick}
-      className="bg-white rounded-xl shadow-md overflow-hidden transition-transform hover:scale-105 cursor-pointer"
+      className="bg-gray-400 bg-opacity-15 rounded-xl shadow-md overflow-hidden transition-transform hover:scale-105 cursor-pointer"
     >
       <div className="p-6">
         <div className="flex items-center space-x-4">
@@ -21,11 +21,11 @@ export default function MemberCard({ member, onClick }: MemberCardProps) {
             className="h-16 w-16 rounded-full object-cover"
           />
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900">{member.name}</h3>
-            <p className="text-sm text-gray-500">{member.role}</p>
+            <h3 className="text-lg font-semibold text-green-400">{member.name}</h3>
+            <p className="text-sm text-gray-400">{member.role}</p>
           </div>
           <div className="flex flex-col items-end">
-            <div className="flex items-center space-x-1 text-indigo-600">
+            <div className="flex items-center space-x-1 text-yellow-400">
               <Award className="h-5 w-5" />
               <span className="font-semibold">{member.devCoins}</span>
             </div>

@@ -37,8 +37,8 @@ export default function CoinsPage() {
       {/* Header Section */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dev Coins Dashboard</h1>
-          <p className="mt-2 text-gray-600">Track and manage development contributions across projects</p>
+          <h1 className="text-3xl font-bold text-white">Dev Coins Dashboard</h1>
+          <p className="mt-2 text-indigo-200">Track and manage development contributions across projects</p>
         </div>
         <div className="relative">
           <button
@@ -50,13 +50,13 @@ export default function CoinsPage() {
             <ChevronDown className="h-4 w-4 ml-2" />
           </button>
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg z-50 border border-gray-100">
+            <div className="absolute right-0 mt-2 w-56 bg-gray-700 rounded-lg shadow-lg z-50">
               <button
                 onClick={() => {
                   setIsModalOpen(true);
                   setIsDropdownOpen(false);
                 }}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-t-lg flex items-center"
+                className="w-full text-left px-4 py-3 hover:bg-gray-900 rounded-t-lg flex items-center"
               >
                 <Trophy className="h-5 w-5 mr-2 text-indigo-600" />
                 <div>
@@ -69,7 +69,7 @@ export default function CoinsPage() {
                   setShowOtherForm(true);
                   setIsDropdownOpen(false);
                 }}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-b-lg flex items-center"
+                className="w-full text-left px-4 py-3 hover:bg-gray-900 rounded-b-lg flex items-center"
               >
                 <Users className="h-5 w-5 mr-2 text-indigo-600" />
                 <div>
@@ -85,18 +85,18 @@ export default function CoinsPage() {
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
         {/* Left Column: Active Projects */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-semibold mb-6 flex items-center">
-              <Github className="h-6 w-6 mr-2 text-indigo-600" />
+          <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-sm p-6 mb-8">
+            <h2 className="text-xl font-semibold mb-6 flex items-center text-white">
+              <Github className="h-6 w-6 mr-2 text-green-500" />
               Active Projects
             </h2>
             <div className="grid gap-4 sm:grid-cols-2">
               {PROJECTS.map(project => (
-                <div key={project.id} className="border border-gray-100 rounded-lg p-4 hover:border-indigo-100 transition-colors">
+                <div key={project.id} className="border border-blue-500 rounded-lg p-4 hover:border-indigo-100 transition-colors">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h3 className="font-medium text-gray-900">{project.name}</h3>
-                      <p className="text-sm text-gray-500">{project.description}</p>
+                      <h3 className="font-medium text-orange-600">{project.name}</h3>
+                      <p className="text-sm text-indigo-200">{project.description}</p>
                     </div>
                     <span className="bg-indigo-50 text-indigo-700 text-sm font-medium px-2.5 py-1 rounded-md">
                       {project.coins} DevCoins
@@ -106,7 +106,7 @@ export default function CoinsPage() {
                     href={`https://github.com/${project.repo}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-gray-600 hover:text-indigo-600 transition-colors"
+                    className="inline-flex items-center text-sm text-blue-500 hover:text-indigo-600 transition-colors"
                   >
                     <Github className="h-4 w-4 mr-1" />
                     View Repository
@@ -119,7 +119,7 @@ export default function CoinsPage() {
 
           {/* Other Contributions Form */}
           {showOtherForm && (
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-sm p-6">
               <h2 className="text-xl font-semibold mb-4 flex items-center">
                 <Users className="h-6 w-6 mr-2 text-indigo-600" />
                 Submit Other Contribution
@@ -141,31 +141,31 @@ export default function CoinsPage() {
 
         {/* Right Column: Dev Coins Policy */}
         <div>
-          <div className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
-            <h2 className="text-xl font-semibold mb-6 flex items-center">
-              <Trophy className="h-6 w-6 mr-2 text-indigo-600" />
+          <div className="bg-gray-400 bg-opacity-15 rounded-xl shadow-sm p-6 sticky top-8">
+            <h2 className="text-xl font-semibold mb-6 flex items-center text-white">
+              <Trophy className="h-6 w-6 mr-2 text-yellow-500" />
               Dev Coins Policy
             </h2>
             <div className="space-y-6">
               <div>
                 <h3 className="text-base font-medium mb-3 flex items-center">
-                  <FileCode className="h-5 w-5 mr-2 text-indigo-600" />
+                  <FileCode className="h-5 w-5 mr-2 text-purple-600" />
                   Project Contributions
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex justify-between items-center">
+                  <li className="flex justify-between items-center text-zinc-300">
                     <span>Pull Request (Merged)</span>
                     <span className="font-medium text-indigo-600">50 DevCoins</span>
                   </li>
-                  <li className="flex justify-between items-center">
+                  <li className="flex justify-between items-center text-zinc-300">
                     <span>Bug Fix</span>
                     <span className="font-medium text-indigo-600">30 DevCoins</span>
                   </li>
-                  <li className="flex justify-between items-center">
+                  <li className="flex justify-between items-center text-zinc-300">
                     <span>Documentation</span>
                     <span className="font-medium text-indigo-600">20 DevCoins</span>
                   </li>
-                  <li className="flex justify-between items-center">
+                  <li className="flex justify-between items-center text-zinc-300">
                     <span>Code Review</span>
                     <span className="font-medium text-indigo-600">15 DevCoins</span>
                   </li>
@@ -177,19 +177,19 @@ export default function CoinsPage() {
                   Community Contributions
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-600">
-                  <li className="flex justify-between items-center">
+                  <li className="flex justify-between items-center text-zinc-300">
                     <span>Workshop Hosting</span>
                     <span className="font-medium text-indigo-600">100 DevCoins</span>
                   </li>
-                  <li className="flex justify-between items-center">
+                  <li className="flex justify-between items-center text-zinc-300">
                     <span>Event Organization</span>
                     <span className="font-medium text-indigo-600">80 DevCoins</span>
                   </li>
-                  <li className="flex justify-between items-center">
+                  <li className="flex justify-between items-center text-zinc-300">
                     <span>Mentoring Sessions</span>
                     <span className="font-medium text-indigo-600">60 DevCoins</span>
                   </li>
-                  <li className="flex justify-between items-center">
+                  <li className="flex justify-between items-center text-zinc-300">
                     <span>Technical Blog</span>
                     <span className="font-medium text-indigo-600">40 DevCoins</span>
                   </li>

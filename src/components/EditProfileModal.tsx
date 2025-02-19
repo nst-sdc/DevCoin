@@ -59,7 +59,7 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md p-6 relative">
+      <div className="bg-gray-900 bg-opacity-90 rounded-lg w-full max-w-md p-6 relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
@@ -67,7 +67,7 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
           <X className="h-5 w-5" />
         </button>
 
-        <h2 className="text-xl font-semibold mb-6">Edit Profile</h2>
+        <h2 className="text-xl text-white font-semibold mb-6">Edit Profile</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Avatar Preview and Controls */}
@@ -92,7 +92,7 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
                   value={formData.avatar}
                   onChange={handleChange}
                   placeholder="Custom avatar URL"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 text-sm text-white bg-gray-600 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <button
                   type="button"
@@ -107,14 +107,14 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
                   <RefreshCw className="h-5 w-5" />
                 </button>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-indigo-100">
                 Enter a custom avatar URL or use your GitHub avatar
               </p>
             </div>
           </div>
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="name" className="block text-sm font-medium text-indigo-100 mb-1">
               Name
             </label>
             <input
@@ -123,13 +123,13 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border text-white bg-gray-600 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-indigo-100 mb-1">
               Email
             </label>
             <input
@@ -138,13 +138,13 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border text-white bg-gray-600 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="github" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="github" className="block text-sm font-medium text-indigo-100 mb-1">
               GitHub Username
             </label>
             <input
@@ -153,13 +153,13 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
               name="github"
               value={formData.github}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 border text-white bg-gray-600 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="linkedin" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="linkedin" className="block text-sm font-medium text-indigo-100 mb-1">
               LinkedIn URL
             </label>
             <input
@@ -168,7 +168,7 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
               name="linkedin"
               value={formData.linkedin}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full px-3 py-2 text-white bg-gray-600 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               placeholder="https://linkedin.com/in/your-profile"
             />
           </div>
@@ -177,7 +177,7 @@ export default function EditProfileModal({ user, isOpen, onClose, onUpdate }: Ed
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900"
+              className="px-4 py-2 text-sm font-medium text-indigo-100 hover:text-gray-900"
             >
               Cancel
             </button>

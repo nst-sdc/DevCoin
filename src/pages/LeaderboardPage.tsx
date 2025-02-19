@@ -32,7 +32,7 @@ export default function LeaderboardPage() {
   return (
     <div className="py-8">
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Dev Club Leaderboard</h1>
+        <h1 className="text-3xl font-bold text-white mb-4">Dev Club Leaderboard</h1>
         <div className="flex justify-center space-x-4">
           <TimeFrameButton
             active={timeFrame === 'all'}
@@ -58,7 +58,7 @@ export default function LeaderboardPage() {
         {sortedMembers.map((member, index) => (
           <div
             key={member.id}
-            className={`bg-white rounded-xl shadow-md mb-4 transform transition-all duration-300 ${
+            className={`bg-gray-400 bg-opacity-15 rounded-xl shadow-md mb-4 transform transition-all duration-300 ${
               animateRank ? 'translate-y-2 opacity-0' : 'translate-y-0 opacity-100'
             }`}
             style={{ transitionDelay: `${index * 100}ms` }}
@@ -69,7 +69,7 @@ export default function LeaderboardPage() {
                 {index === 1 && <Trophy className="h-8 w-8 text-gray-400 mx-auto" />}
                 {index === 2 && <Trophy className="h-8 w-8 text-amber-700 mx-auto" />}
                 {index > 2 && (
-                  <span className="text-xl font-bold text-gray-500">#{index + 1}</span>
+                  <span className="text-xl font-bold text-lime-90">#{index + 1}</span>
                 )}
               </div>
               
@@ -80,8 +80,13 @@ export default function LeaderboardPage() {
               />
               
               <div className="flex-1">
+
+                <h3 className="text-lg font-semibold text-white">{member.name}</h3>
+                <p className="text-sm text-zinc-400">{member.role}</p>
+
                 <h3 className="text-lg font-semibold text-gray-900">{member.full_name}</h3>
                 <p className="text-sm text-gray-500">{member.github_username || 'Developer'}</p>
+
               </div>
               
               <div className="text-right">

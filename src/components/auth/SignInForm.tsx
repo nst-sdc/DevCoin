@@ -63,15 +63,15 @@ export default function SignInForm() {
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <Link to="/" className="flex items-center justify-center space-x-2 mb-6">
               <Code2 className="h-10 w-10 text-indigo-600" />
-              <span className="text-2xl font-bold text-gray-900">Dev Club</span>
+              <span className="text-2xl font-bold text-white">Dev Club</span>
             </Link>
-            <h2 className="text-3xl font-extrabold text-gray-900">Welcome back</h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <h2 className="text-3xl font-extrabold text-white">Welcome back</h2>
+            <p className="mt-2 text-sm text-indigo-100">
               Don't have an account?{' '}
               <Link to="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
                 Sign up now
@@ -101,7 +101,7 @@ export default function SignInForm() {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="email" className="block text-sm font-medium text-indigo-100">
                   Email address
                 </label>
                 <div className="mt-1 relative">
@@ -122,7 +122,7 @@ export default function SignInForm() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="password" className="block text-sm font-medium text-indigo-100">
                   Password
                 </label>
                 <div className="mt-1 relative">
@@ -199,7 +199,6 @@ export default function SignInForm() {
             <div className="flex items-center space-x-6">
               <img src="https://github.com/nst-sdc/NIRMAN-submission/releases/download/v1/ADYPU.png" alt="ADYPU" className="h-8 w-auto grayscale opacity-50" />
               <img src="https://github.com/nst-sdc/NIRMAN-submission/releases/download/v1/logo_NST.png" alt="NST" className="h-8 w-auto grayscale opacity-50" />
-              <img src="https://github.com/nst-sdc/NIRMAN-submission/releases/download/v1/RU.png" alt="RU" className="h-8 w-auto grayscale opacity-50" />
             </div>
           </div>
         </div>
