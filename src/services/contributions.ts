@@ -1,33 +1,40 @@
-import { db } from './firebase';
-import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { supabase } from '../lib/supabase';
 import { fetchUserContributions } from './github';
 
 export const addContribution = async (contribution: any) => {
   try {
-    const contributionRef = await addDoc(collection(db, 'contributions'), {
-      ...contribution,
-      timestamp: new Date().toISOString(),
-    });
+    // Add contribution
+    const { data: contributionData, error: contributionError } = await supabase
+      .from('contributions')
+      .insert({
+        ...contribution,
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
-    // Update member's total coins
-    const memberRef = doc(db, 'members', contribution.memberId);
-    const memberDoc = await getDoc(memberRef);
-    
-    if (memberDoc.exists()) {
-      const currentCoins = memberDoc.data().devCoins || 0;
-      await updateDoc(memberRef, {
-        devCoins: currentCoins + contribution.coins,
-      });
-    }
+    if (contributionError) throw contributionError;
 
-    return contributionRef.id;
+    // Update user's dev coins
+    const { data: userData, error: userError } = await supabase
+      .from('profiles')
+      .update({ 
+        dev_coins: contribution.dev_coins_earned 
+      })
+      .eq('id', contribution.user_id)
+      .select()
+      .single();
+
+    if (userError) throw userError;
+
+    return contributionData.id;
   } catch (error) {
     console.error('Error adding contribution:', error);
     throw error;
   }
 };
 
-export const syncGithubContributions = async (memberId: string, githubUsername: string) => {
+export const syncGithubContributions = async (userId: string, githubUsername: string) => {
   try {
     const contributions = await fetchUserContributions(githubUsername);
     

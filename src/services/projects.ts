@@ -1,28 +1,38 @@
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
-import { db } from './firebase';
+import { supabase } from '../lib/supabase';
 import { fetchRepositories } from './github';
 
 export const syncProjects = async () => {
   try {
     const repos = await fetchRepositories();
-    const projectsRef = collection(db, 'projects');
 
     for (const repo of repos) {
-      const q = query(projectsRef, where('githubId', '==', repo.id));
-      const existing = await getDocs(q);
+      // Check if project already exists
+      const { data: existing, error: queryError } = await supabase
+        .from('projects')
+        .select()
+        .eq('github_id', repo.id)
+        .single();
 
-      if (existing.empty) {
-        await addDoc(projectsRef, {
-          githubId: repo.id,
-          name: repo.name,
-          description: repo.description,
-          url: repo.url,
-          status: 'open',
-          createdAt: new Date().toISOString(),
-          updatedAt: repo.updatedAt,
-          language: repo.language,
-          stars: repo.stars
-        });
+      if (queryError && queryError.code !== 'PGRST116') { // PGRST116 is the error code for no rows returned
+        throw queryError;
+      }
+
+      if (!existing) {
+        const { error: insertError } = await supabase
+          .from('projects')
+          .insert({
+            github_id: repo.id,
+            name: repo.name,
+            description: repo.description,
+            url: repo.url,
+            status: 'open',
+            created_at: new Date().toISOString(),
+            updated_at: repo.updatedAt,
+            language: repo.language,
+            stars: repo.stars
+          });
+
+        if (insertError) throw insertError;
       }
     }
 
@@ -35,12 +45,12 @@ export const syncProjects = async () => {
 
 export const getProjects = async () => {
   try {
-    const projectsRef = collection(db, 'projects');
-    const snapshot = await getDocs(projectsRef);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const { data: projects, error } = await supabase
+      .from('projects')
+      .select('*');
+
+    if (error) throw error;
+    return projects;
   } catch (error) {
     console.error('Error fetching projects:', error);
     throw error;
