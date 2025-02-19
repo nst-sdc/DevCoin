@@ -18,12 +18,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   useEffect(() => {
-    const currentUser = getCurrentSession();
-    setState({
-      user: currentUser,
-      loading: false,
-      error: null,
-    });
+    async function loadSession() {
+      try {
+        const currentUser = await getCurrentSession();
+        setState({
+          user: currentUser,
+          loading: false,
+          error: null,
+        });
+      } catch (error: any) {
+        setState({
+          user: null,
+          loading: false,
+          error: error.message,
+        });
+      }
+    }
+    loadSession();
   }, []);
 
   const value = {
@@ -56,6 +67,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     },
   };
+
+  if (state.loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

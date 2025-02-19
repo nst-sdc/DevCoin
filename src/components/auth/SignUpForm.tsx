@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Github, Mail, Lock, Code2, ArrowRight, Eye, EyeOff, User, Linkedin } from 'lucide-react';
 import { signUp } from '../../services/auth';
+import { initiateGithubLogin, handleGithubCallback } from '../../services/githubAuth';
 
 export default function SignUpForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -15,6 +17,42 @@ export default function SignUpForm() {
     github: '',
     linkedin: '',
   });
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code) {
+      handleGithubAuth(code);
+    }
+  }, [searchParams]);
+
+  const handleGithubAuth = async (code: string) => {
+    setLoading(true);
+    try {
+      const user = await handleGithubCallback(code);
+      // Pre-fill the form with GitHub user data
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || '',
+        name: user.name || '',
+        github: user.githubUsername || '',
+      }));
+      toast.success('Successfully connected with GitHub!');
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGithubLogin = () => {
+    setLoading(true);
+    try {
+      initiateGithubLogin();
+    } catch (error: any) {
+      toast.error(error.message);
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +121,26 @@ export default function SignUpForm() {
             </p>
           </div>
 
-          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <button
+            type="button"
+            onClick={handleGithubLogin}
+            disabled={loading}
+            className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            <Github className="h-5 w-5 mr-2" />
+            Continue with GitHub
+          </button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or fill in your details</span>
+            </div>
+          </div>
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-indigo-200">

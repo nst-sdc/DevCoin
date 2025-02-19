@@ -47,7 +47,7 @@ export default function ProfilePage() {
           </div>
           {/* Profile picture overlapping the banner */}
           <img
-            src={user.avatar}
+            src={user.avatar || `https://github.com/${user.githubUsername}.png`}
             alt={user.name}
             className="absolute bottom-0 left-8 transform translate-y-1/2 w-24 h-24 rounded-full border-4 border-white shadow-lg"
           />
@@ -57,11 +57,28 @@ export default function ProfilePage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-100">{user.name}</h1>
               <p className="text-gray-600 capitalize">{user.role}</p>
+              {user.bio && <p className="mt-2 text-gray-600">{user.bio}</p>}
             </div>
             <div className="flex items-center space-x-2">
               <Award className="h-5 w-5 text-indigo-600" />
               <span className="font-semibold text-lg">{user.devCoins} DevCoins</span>
             </div>
+          </div>
+
+          {/* Location and Company */}
+          <div className="mt-4 flex flex-wrap gap-4 text-gray-600">
+            {user.location && (
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-500">📍</span>
+                <span>{user.location}</span>
+              </div>
+            )}
+            {user.company && (
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-500">🏢</span>
+                <span>{user.company}</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -76,16 +93,16 @@ export default function ProfilePage() {
               <Mail className="h-5 w-5 text-gray-500" />
               <span className="text-gray-100">{user.email}</span>
             </div>
-            {user.github && (
+            {user.githubUsername && (
               <div className="flex items-center space-x-3">
                 <Github className="h-5 w-5 text-gray-500" />
                 <a
-                  href={`https://github.com/${user.github}`}
+                  href={user.github}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-indigo-100 hover:text-indigo-500"
                 >
-                  @{user.github}
+                  @{user.githubUsername}
                 </a>
               </div>
             )}

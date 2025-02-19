@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, ArrowUp, ArrowDown } from 'lucide-react';
-import { mockMembers } from '../types';
+import { supabase } from '../lib/supabase';
 
 export default function LeaderboardPage() {
   const [timeFrame, setTimeFrame] = useState<'all' | 'month' | 'week'>('all');
   const [animateRank, setAnimateRank] = useState(false);
+  const [members, setMembers] = useState<any[]>([]);
 
   useEffect(() => {
     setAnimateRank(true);
@@ -12,7 +13,21 @@ export default function LeaderboardPage() {
     return () => clearTimeout(timer);
   }, [timeFrame]);
 
-  const sortedMembers = [...mockMembers].sort((a, b) => b.devCoins - a.devCoins);
+  useEffect(() => {
+    async function fetchMembers() {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*');
+      if (error) {
+        console.error('Error fetching leaderboard data:', error);
+      } else if (data) {
+        setMembers(data);
+      }
+    }
+    fetchMembers();
+  }, [timeFrame]);
+
+  const sortedMembers = [...members].sort((a, b) => b.dev_coins - a.dev_coins);
 
   return (
     <div className="py-8">
@@ -39,7 +54,6 @@ export default function LeaderboardPage() {
           </TimeFrameButton>
         </div>
       </div>
-
       <div className="max-w-3xl mx-auto">
         {sortedMembers.map((member, index) => (
           <div
@@ -60,19 +74,24 @@ export default function LeaderboardPage() {
               </div>
               
               <img
-                src={member.avatar}
-                alt={member.name}
+                src={member.avatar_url}
+                alt={member.full_name}
                 className="h-12 w-12 rounded-full object-cover"
               />
               
               <div className="flex-1">
+
                 <h3 className="text-lg font-semibold text-white">{member.name}</h3>
                 <p className="text-sm text-zinc-400">{member.role}</p>
+
+                <h3 className="text-lg font-semibold text-gray-900">{member.full_name}</h3>
+                <p className="text-sm text-gray-500">{member.github_username || 'Developer'}</p>
+
               </div>
               
               <div className="text-right">
                 <div className="text-2xl font-bold text-indigo-600">
-                  {member.devCoins}
+                  {member.dev_coins}
                 </div>
                 <div className="text-sm text-gray-500">DevCoins</div>
               </div>
