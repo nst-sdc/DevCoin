@@ -40,9 +40,13 @@ export interface UserContribution {
 }
 
 export const fetchRepositories = async (): Promise<Repository[]> => {
+  if (!import.meta.env.VITE_GITHUB_TOKEN) {
+    throw new Error('GitHub token is not configured. Please set VITE_GITHUB_TOKEN in your .env file.');
+  }
+
   try {
     const { data: repos } = await octokit.repos.listForOrg({
-      org: 'nst-sdc',
+      org: 'AryanVBW',  // Updated to match your organization
       sort: 'updated',
       direction: 'desc',
       per_page: 100
