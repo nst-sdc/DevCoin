@@ -46,7 +46,7 @@ export const fetchRepositories = async (): Promise<Repository[]> => {
 
   try {
     const { data: repos } = await octokit.repos.listForOrg({
-      org: 'AryanVBW',  // Updated to match your organization
+      org: 'NST-SDC',  // Correct organization name
       sort: 'updated',
       direction: 'desc',
       per_page: 100
@@ -54,7 +54,7 @@ export const fetchRepositories = async (): Promise<Repository[]> => {
 
     const repositories = await Promise.all(repos.map(async repo => {
       const { data: pulls } = await octokit.pulls.list({
-        owner: 'nst-sdc',
+        owner: 'NST-SDC',
         repo: repo.name,
         state: 'all',
         per_page: 10,
@@ -62,15 +62,34 @@ export const fetchRepositories = async (): Promise<Repository[]> => {
         direction: 'desc'
       });
 
-      const pullRequests = pulls.map(pr => ({
-        id: pr.id,
-        title: pr.title,
-        url: pr.html_url,
-        author: pr.user?.login || 'Unknown',
-        createdAt: pr.created_at,
-        status: pr.merged_at ? 'merged' : pr.state as 'open' | 'closed',
-        additions: pr.additions || 0,
-        deletions: pr.deletions || 0
+      // Fetch additional PR details to get additions and deletions
+      const pullRequests = await Promise.all(pulls.map(async pr => {
+        // Get detailed PR info including additions and deletions
+        let additions = 0;
+        let deletions = 0;
+        
+        try {
+          const { data: prDetails } = await octokit.pulls.get({
+            owner: 'NST-SDC',
+            repo: repo.name,
+            pull_number: pr.number
+          });
+          additions = prDetails.additions || 0;
+          deletions = prDetails.deletions || 0;
+        } catch (error) {
+          console.error(`Error fetching PR details for ${pr.number}:`, error);
+        }
+        
+        return {
+          id: pr.id,
+          title: pr.title,
+          url: pr.html_url,
+          author: pr.user?.login || 'Unknown',
+          createdAt: pr.created_at,
+          status: pr.merged_at ? 'merged' : (pr.state === 'open' || pr.state === 'closed' ? pr.state : 'open') as 'open' | 'closed' | 'merged',
+          additions,
+          deletions
+        };
       }));
 
       return {
@@ -78,10 +97,10 @@ export const fetchRepositories = async (): Promise<Repository[]> => {
         name: repo.name,
         description: repo.description || '',
         url: repo.html_url,
-        stars: repo.stargazers_count,
+        stars: repo.stargazers_count || 0, // Ensure it's always a number
         language: repo.language || 'Unknown',
-        updatedAt: repo.updated_at,
-        openIssues: repo.open_issues_count,
+        updatedAt: repo.updated_at || new Date().toISOString(), // Ensure it's always a string
+        openIssues: repo.open_issues_count || 0, // Ensure it's always a number
         pullRequests
       };
     }));
