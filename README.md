@@ -65,7 +65,7 @@ For contributions, please use our [organization repository](https://github.com/n
 
 ## 📞 Support & Contact
 
-- **Developer**: Vivek W
+- **Team meamber **: Vivek W
 - **Email**: vivek.aryanvbw@gmail.com
 - **GitHub**: [@AryanVBW](https://github.com/AryanVBW)
 
