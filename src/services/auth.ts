@@ -113,15 +113,29 @@ export const signIn = async ({ email, password }: SignInData): Promise<User> => 
 
 export const signInWithGitHub = async (): Promise<void> => {
   try {
+    // Get GitHub organization name from environment variables
+    const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
+    console.log('Using organization for GitHub auth:', orgName);
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
+        redirectTo: `${window.location.origin}/auth/callback`,
+        scopes: 'user:email,read:user,repo'
       }
     });
     
-    if (error) throw error;
-    return data;
+    if (error) {
+      console.error('GitHub OAuth error:', error);
+      throw error;
+    }
+    
+    if (!data.url) {
+      throw new Error('No redirect URL returned from Supabase');
+    }
+    
+    // Redirect to GitHub OAuth page
+    window.location.href = data.url;
   } catch (error) {
     console.error('Error signing in with GitHub:', error);
     throw error;

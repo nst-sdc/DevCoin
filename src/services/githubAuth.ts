@@ -23,11 +23,13 @@ export const handleGithubCallback = async (code: string): Promise<User> => {
         client_id: GITHUB_CLIENT_ID,
         client_secret: import.meta.env.VITE_GITHUB_CLIENT_SECRET,
         code,
+        redirect_uri: GITHUB_REDIRECT_URI
       }),
     });
     
     const tokenData = await tokenResponse.json();
     if (!tokenData.access_token) {
+      console.error('GitHub OAuth error:', tokenData);
       throw new Error('Failed to get access token from GitHub');
     }
 
@@ -56,14 +58,24 @@ export const handleGithubCallback = async (code: string): Promise<User> => {
     const emails = await emailResponse.json();
     const primaryEmail = emails.find((email: any) => email.primary)?.email || githubUser.email;
 
-    // Sign in with Supabase using GitHub token
-    const { data: { user: authUser }, error: signInError } = await supabase.auth.signInWithGithub({
+    // Sign in with Supabase using the access token from GitHub
+    const { error: signInError } = await supabase.auth.signInWithOAuth({
       provider: 'github',
-      access_token: tokenData.access_token,
+      options: {
+        redirectTo: GITHUB_REDIRECT_URI
+      }
     });
 
-    if (signInError || !authUser) {
+    if (signInError) {
       throw new Error(signInError?.message || 'Failed to sign in with GitHub');
+    }
+    
+    // Get the current session to get the user
+    const { data: sessionData } = await supabase.auth.getSession();
+    const authUser = sessionData?.session?.user;
+    
+    if (!authUser) {
+      throw new Error('Failed to get authenticated user');
     }
 
     // Check if user exists in our users table
