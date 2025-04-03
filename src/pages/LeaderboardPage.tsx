@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, ArrowUp, ArrowDown, Code, GitPullRequest, GitPullRequestDraft } from 'lucide-react';
+import { Trophy, ArrowUp, ArrowDown, Code, GitPullRequest, GitPullRequestDraft, GitCommit } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { fetchLeaderboardData, UserStats } from '../services/github';
 
@@ -85,7 +85,7 @@ export default function LeaderboardPage() {
             This Week
           </TimeFrameButton>
         </div>
-        <p className="text-sm text-zinc-400">Showing lines of code, merged PRs, and open PRs from GitHub contributions</p>
+        <p className="text-sm text-zinc-400">Showing lines of code, commits, and pull requests from GitHub contributions</p>
       </div>
 
       {isLoading && (
@@ -143,6 +143,11 @@ export default function LeaderboardPage() {
                       </div>
                       
                       <div className="flex items-center">
+                        <GitCommit className="h-4 w-4 mr-1 text-blue-400" />
+                        <span>{member.totalCommits} commits</span>
+                      </div>
+                      
+                      <div className="flex items-center">
                         <GitPullRequest className="h-4 w-4 mr-1 text-green-500" />
                         <span>{member.mergedPullRequests} merged</span>
                       </div>
@@ -171,6 +176,31 @@ export default function LeaderboardPage() {
                         <ArrowDown className="h-5 w-5" />
                       </div>
                     ) : null}
+                  </div>
+                </div>
+                
+                {/* Expanded contribution details */}
+                <div className="px-6 pb-4 pt-2 grid grid-cols-4 gap-2 text-center border-t border-gray-600 border-opacity-40 mt-2">
+                  <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2">
+                    <div className="text-sm font-bold text-white">{member.totalLinesOfCode.toLocaleString()}</div>
+                    <div className="text-xs text-gray-400">Total Lines</div>
+                  </div>
+                  
+                  <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2">
+                    <div className="text-sm font-bold text-blue-400">{member.totalCommits}</div>
+                    <div className="text-xs text-gray-400">Commits</div>
+                  </div>
+                  
+                  <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2">
+                    <div className="text-sm font-bold text-blue-200">{member.commitLinesOfCode.toLocaleString()}</div>
+                    <div className="text-xs text-gray-400">Commit Lines</div>
+                  </div>
+                  
+                  <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2">
+                    <div className="text-sm font-bold text-green-400">
+                      {member.mergedPullRequests + member.openPullRequests}
+                    </div>
+                    <div className="text-xs text-gray-400">Total PRs</div>
                   </div>
                 </div>
               </div>
