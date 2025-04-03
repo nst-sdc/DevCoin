@@ -1,4 +1,5 @@
 import { Octokit } from '@octokit/rest';
+import { cacheService } from './cache';
 
 // Log when the GitHub service is initialized
 console.log('Initializing GitHub service...');
@@ -10,6 +11,20 @@ const octokit = new Octokit({
 
 // Log that Octokit has been initialized (without exposing the token)
 console.log('Octokit initialized with auth token:', import.meta.env.VITE_GITHUB_TOKEN ? 'Token provided' : 'No token provided');
+
+// Cache keys
+const CACHE_KEYS = {
+  ORGANIZATION_MEMBERS: 'organization_members',
+  LEADERBOARD_ALL: 'leaderboard_all',
+  LEADERBOARD_MONTH: 'leaderboard_month',
+  LEADERBOARD_WEEK: 'leaderboard_week'
+};
+
+// Cache expiration times (in milliseconds)
+const CACHE_EXPIRATION = {
+  ORGANIZATION_MEMBERS: 5 * 60 * 60 * 1000, // 5 hours
+  LEADERBOARD: 2 * 60 * 60 * 1000 // 2 hours
+};
 
 export interface Repository {
   id: number;
@@ -321,6 +336,21 @@ export const fetchUserContributions = async (username: string): Promise<UserCont
  * Includes lines of code, merged PRs, and open PRs
  */
 export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' = 'all'): Promise<UserStats[]> => {
+  // Determine cache key based on timeFrame
+  const cacheKey = timeFrame === 'all' 
+    ? CACHE_KEYS.LEADERBOARD_ALL 
+    : timeFrame === 'month' 
+      ? CACHE_KEYS.LEADERBOARD_MONTH 
+      : CACHE_KEYS.LEADERBOARD_WEEK;
+      
+  // Try to get data from cache
+  const cachedData = cacheService.get<UserStats[]>(cacheKey);
+  if (cachedData) {
+    console.log(`Using cached leaderboard data for timeFrame: ${timeFrame}`);
+    return cachedData;
+  }
+  
+  console.log(`Fetching fresh leaderboard data for timeFrame: ${timeFrame}...`);
   try {
     const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
     console.log(`Fetching leaderboard data for ${orgName} with timeframe: ${timeFrame}`);
@@ -426,7 +456,17 @@ export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' =
       }
     }
     
-    return userStatsArray.sort((a, b) => b.devCoins - a.devCoins);
+    const sortedStats = userStatsArray.sort((a, b) => b.devCoins - a.devCoins);
+    
+    // Cache the results
+    const cacheKey = timeFrame === 'all' 
+      ? CACHE_KEYS.LEADERBOARD_ALL 
+      : timeFrame === 'month' 
+        ? CACHE_KEYS.LEADERBOARD_MONTH 
+        : CACHE_KEYS.LEADERBOARD_WEEK;
+    cacheService.set(cacheKey, sortedStats, CACHE_EXPIRATION.LEADERBOARD);
+    
+    return sortedStats;
   } catch (error) {
     console.error('Error fetching leaderboard data:', error);
     return [];
@@ -437,6 +477,14 @@ export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' =
  * Fetches all organization members and combines them with their team memberships
  */
 export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
+  // Try to get data from cache
+  const cachedMembers = cacheService.get<GithubMember[]>(CACHE_KEYS.ORGANIZATION_MEMBERS);
+  if (cachedMembers) {
+    console.log('Using cached organization members data');
+    return cachedMembers;
+  }
+  
+  console.log('Fetching fresh organization members data...');
   try {
     const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
     console.log(`Fetching members from organization: ${orgName}`);
@@ -664,7 +712,12 @@ export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
       }
     }
     
-    return members.sort((a, b) => b.devCoins - a.devCoins);
+    const sortedMembers = members.sort((a, b) => b.devCoins - a.devCoins);
+    
+    // Cache the results
+    cacheService.set(CACHE_KEYS.ORGANIZATION_MEMBERS, sortedMembers, CACHE_EXPIRATION.ORGANIZATION_MEMBERS);
+    
+    return sortedMembers;
   } catch (error) {
     console.error('Error fetching organization members:', error);
     return [];
