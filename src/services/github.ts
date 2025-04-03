@@ -1,4 +1,5 @@
 import { Octokit } from '@octokit/rest';
+import { cacheService } from './cache';
 
 // Log when the GitHub service is initialized
 console.log('Initializing GitHub service...');
@@ -10,6 +11,20 @@ const octokit = new Octokit({
 
 // Log that Octokit has been initialized (without exposing the token)
 console.log('Octokit initialized with auth token:', import.meta.env.VITE_GITHUB_TOKEN ? 'Token provided' : 'No token provided');
+
+// Cache keys
+const CACHE_KEYS = {
+  ORGANIZATION_MEMBERS: 'organization_members',
+  LEADERBOARD_ALL: 'leaderboard_all',
+  LEADERBOARD_MONTH: 'leaderboard_month',
+  LEADERBOARD_WEEK: 'leaderboard_week'
+};
+
+// Cache expiration times (in milliseconds)
+const CACHE_EXPIRATION = {
+  ORGANIZATION_MEMBERS: 5 * 60 * 60 * 1000, // 5 hours
+  LEADERBOARD: 2 * 60 * 60 * 1000 // 2 hours
+};
 
 export interface Repository {
   id: number;
@@ -59,8 +74,6 @@ export interface UserStats {
   mergedPullRequests: number;
   openPullRequests: number;
   devCoins: number;
-  totalCommits: number;
-  commitLinesOfCode: number;
 }
 
 export interface GithubMember {
@@ -80,118 +93,264 @@ export interface GithubMember {
     totalLinesOfCode: number;
     mergedPullRequests: number;
     openPullRequests: number;
-    totalCommits: number;
-    commitLinesOfCode: number;
   };
   devCoins: number;
 }
 
-export interface CommitData {
-  author: string;
-  sha: string;
-  message: string;
-  date: string;
-  url: string;
-  additions: number;
-  deletions: number;
-  repository: string;
-}
+export const fetchRepositories = async (): Promise<Repository[]> => {
+  console.log('Fetching repositories...');
+  
+  // Check if GitHub token is configured
+  if (!import.meta.env.VITE_GITHUB_TOKEN) {
+    console.error('GitHub token is not configured in .env file');
+    throw new Error('GitHub token is not configured. Please set VITE_GITHUB_TOKEN in your .env file.');
+  }
+  
+  // Get organization name from environment variables or use default
+  const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
+  console.log('Using organization:', orgName);
 
-// Fetch commit data for a user across all repositories
-export const fetchUserCommits = async (
-  username: string,
-  timeFrame: 'all' | 'month' | 'week' = 'all'
-): Promise<CommitData[]> => {
   try {
-    const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
-    console.log(`Fetching commits for user ${username} in ${orgName}`);
-
-    // Calculate date limit based on timeframe
-    let since: string | undefined = undefined;
-    if (timeFrame !== 'all') {
-      const now = new Date();
-      if (timeFrame === 'month') {
-        since = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString();
-      } else if (timeFrame === 'week') {
-        const weekAgo = new Date(now);
-        weekAgo.setDate(now.getDate() - 7);
-        since = weekAgo.toISOString();
-      }
-    }
-
-    // Get repositories
-    const repositories = await fetchRepositories();
-    const commits: CommitData[] = [];
-
-    // For each repository, get commits by the user
-    for (const repo of repositories) {
-      // Process both direct repos and forked repos
-      const repoOwner = repo.fork && repo.parentRepo ? repo.parentRepo.owner : orgName;
-      const repoName = repo.fork && repo.parentRepo ? repo.parentRepo.name : repo.name;
-
+    console.log(`Calling GitHub API to list repositories for org: ${orgName}`);
+    let repos = [];
+    
+    try {
+      // First attempt: Try to get repositories from the organization
+      const { data } = await octokit.repos.listForOrg({
+        org: orgName,
+        sort: 'updated',
+        direction: 'desc',
+        per_page: 100,
+        type: 'all' // Include both regular and forked repos
+      });
+      repos = data;
+      console.log(`Found ${repos.length} repositories in the organization ${orgName}`);
+    } catch (orgError: any) {
+      console.warn(`Error fetching repos for org ${orgName}:`, orgError.message);
+      
+      // If organization approach fails, try getting user's repositories instead
+      console.log('Attempting to fetch repositories for the authenticated user...');
       try {
-        // Search for commits by the author
-        const params: any = {
-          owner: repoOwner,
-          repo: repoName,
-          author: username,
+        const { data: userRepos } = await octokit.repos.listForAuthenticatedUser({
+          sort: 'updated',
+          direction: 'desc',
           per_page: 100
-        };
-
-        if (since) {
-          params.since = since;
-        }
-
-        const { data: repoCommits } = await octokit.repos.listCommits(params);
-
-        // Get detailed commit data for each commit
-        for (const commit of repoCommits) {
-          try {
-            // Limit API calls to avoid rate limiting - process up to 20 commits per repo
-            if (commits.length > 20) break;
-
-            const { data: commitDetail } = await octokit.repos.getCommit({
-              owner: repoOwner,
-              repo: repoName,
-              ref: commit.sha
-            });
-
-            // Calculate additions and deletions across all files
-            const additions = commitDetail.files?.reduce((sum, file) => sum + (file.additions || 0), 0) || 0;
-            const deletions = commitDetail.files?.reduce((sum, file) => sum + (file.deletions || 0), 0) || 0;
-
-            commits.push({
-              author: username,
-              sha: commit.sha,
-              message: commit.commit.message,
-              date: commit.commit.author?.date || commit.commit.committer?.date || new Date().toISOString(),
-              url: commit.html_url,
-              additions,
-              deletions,
-              repository: repoName
-            });
-          } catch (error) {
-            console.error(`Error fetching commit details for ${commit.sha} in ${repoName}:`, error);
-          }
-        }
-      } catch (error) {
-        console.error(`Error fetching commits for ${repoName}:`, error);
+        });
+        
+        // Filter to only include repositories from the target organization if specified
+        repos = userRepos.filter(repo => 
+          !orgName || repo.owner.login.toLowerCase() === orgName.toLowerCase()
+        );
+        
+        console.log(`Found ${repos.length} repositories for the authenticated user`);
+      } catch (userError: any) {
+        console.error('Error fetching user repositories:', userError.message);
+        throw userError; // Re-throw to be caught by the outer catch block
+      }
+    }
+    
+    if (repos.length === 0) {
+      console.warn('No repositories found. This might indicate an issue with permissions or the organization name.');
+      // Try one more approach - search for repositories
+      try {
+        console.log(`Searching for repositories in ${orgName}...`);
+        const { data } = await octokit.search.repos({
+          q: `org:${orgName}`,
+          sort: 'updated',
+          order: 'desc',
+          per_page: 100
+        });
+        
+        repos = data.items;
+        console.log(`Found ${repos.length} repositories through search`);
+      } catch (searchError: any) {
+        console.warn('Error searching for repositories:', searchError.message);
       }
     }
 
-    // Sort by date (newest first)
-    return commits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  } catch (error) {
-    console.error(`Error in fetchUserCommits for ${username}:`, error);
+    const repositories = await Promise.all(repos.map(async repo => {
+      // Get parent repo info if it's a fork
+      let parentRepo = undefined;
+      if (repo.fork) {
+        try {
+          const { data: repoData } = await octokit.repos.get({
+            owner: repo.owner.login,
+            repo: repo.name
+          });
+          
+          if (repoData.parent) {
+            parentRepo = {
+              name: repoData.parent.name,
+              owner: repoData.parent.owner.login
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching parent repo info for ${repo.name}:`, error);
+        }
+      }
+
+      const { data: pulls } = await octokit.pulls.list({
+        owner: repo.owner.login,
+        repo: repo.name,
+        state: 'all',
+        per_page: 10,
+        sort: 'updated',
+        direction: 'desc'
+      });
+
+      // Fetch additional PR details to get additions and deletions
+      const pullRequests = await Promise.all(pulls.map(async pr => {
+        // Get detailed PR info including additions and deletions
+        let additions = 0;
+        let deletions = 0;
+        
+        try {
+          const { data: prDetails } = await octokit.pulls.get({
+            owner: repo.owner.login,
+            repo: repo.name,
+            pull_number: pr.number
+          });
+          additions = prDetails.additions || 0;
+          deletions = prDetails.deletions || 0;
+        } catch (error) {
+          console.error(`Error fetching PR details for ${pr.number}:`, error);
+        }
+        
+        return {
+          id: pr.id,
+          title: pr.title,
+          url: pr.html_url,
+          author: pr.user?.login || 'Unknown',
+          createdAt: pr.created_at,
+          status: pr.merged_at ? 'merged' : (pr.state === 'open' || pr.state === 'closed' ? pr.state : 'open') as 'open' | 'closed' | 'merged',
+          additions,
+          deletions
+        };
+      }));
+
+      return {
+        id: repo.id,
+        name: repo.name,
+        description: repo.description || '',
+        url: repo.html_url,
+        stars: repo.stargazers_count || 0,
+        language: repo.language || 'Unknown',
+        updatedAt: repo.updated_at || new Date().toISOString(),
+        openIssues: repo.open_issues_count || 0,
+        pullRequests,
+        fork: repo.fork || false,
+        parentRepo
+      };
+    }));
+
+    return repositories;
+  } catch (error: any) {
+    console.error('Error fetching repositories:', error);
+    
+    // Check if we can get rate limit information
+    try {
+      const { data: rateLimit } = await octokit.rateLimit.get();
+      console.log('GitHub API Rate Limit Status:', {
+        limit: rateLimit.rate.limit,
+        remaining: rateLimit.rate.remaining,
+        reset: new Date(rateLimit.rate.reset * 1000).toLocaleString()
+      });
+    } catch (rateLimitError) {
+      console.error('Could not fetch rate limit information');
+    }
+    
+    // Provide more specific error messages based on common issues
+    if (error.status === 401) {
+      console.error('Authentication error: The provided GitHub token is invalid or expired.');
+      throw new Error('GitHub authentication failed. Please check your token.');
+    } else if (error.status === 403) {
+      console.error('Permission error: The token does not have sufficient permissions or rate limit exceeded.');
+      throw new Error('GitHub permission denied. Your token may not have the required permissions or rate limit exceeded.');
+    } else if (error.status === 404) {
+      console.error(`Not found error: The organization "${orgName}" might not exist or you don\'t have access to it.`);
+      throw new Error(`Organization "${orgName}" not found or not accessible with your token.`);
+    }
+    
+    console.error('Detailed error:', JSON.stringify(error, null, 2));
     return [];
   }
-}
+};
+
+export const fetchUserContributions = async (username: string): Promise<UserContribution[]> => {
+  // Get organization name from environment variables or use default
+  const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
+  try {
+    // Fetch pull requests
+    const { data: pullRequests } = await octokit.search.issuesAndPullRequests({
+      q: `author:${username} type:pr org:${orgName}`,
+      sort: 'created',
+      order: 'desc',
+      per_page: 100
+    });
+
+    // Fetch issues
+    const { data: issues } = await octokit.search.issuesAndPullRequests({
+      q: `author:${username} type:issue org:${orgName}`,
+      sort: 'created',
+      order: 'desc',
+      per_page: 100
+    });
+
+    // Process pull requests
+    const prContributions = pullRequests.items.map(pr => ({
+      id: pr.id.toString(),
+      type: 'PR' as const,
+      title: pr.title,
+      description: pr.body || '',
+      url: pr.html_url,
+      createdAt: pr.created_at,
+      repository: pr.repository_url.split('/').pop() || '',
+      status: pr.state,
+      points: calculatePoints(pr)
+    }));
+
+    // Process issues
+    const issueContributions = issues.items.map(issue => ({
+      id: issue.id.toString(),
+      type: 'ISSUE' as const,
+      title: issue.title,
+      description: issue.body || '',
+      url: issue.html_url,
+      createdAt: issue.created_at,
+      repository: issue.repository_url.split('/').pop() || '',
+      status: issue.state,
+      points: calculatePoints(issue)
+    }));
+
+    return [...prContributions, ...issueContributions].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  } catch (error) {
+    console.error('Error fetching user contributions:', error);
+    return [];
+  }
+};
 
 /**
  * Fetches leaderboard data showing users ranked by their GitHub contributions
  * Includes lines of code, merged PRs, and open PRs
  */
 export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' = 'all'): Promise<UserStats[]> => {
+  // Determine cache key based on timeFrame
+  const cacheKey = timeFrame === 'all' 
+    ? CACHE_KEYS.LEADERBOARD_ALL 
+    : timeFrame === 'month' 
+      ? CACHE_KEYS.LEADERBOARD_MONTH 
+      : CACHE_KEYS.LEADERBOARD_WEEK;
+      
+  // Try to get data from cache
+  const cachedData = cacheService.get<UserStats[]>(cacheKey);
+  if (cachedData) {
+    console.log(`Using cached leaderboard data for timeFrame: ${timeFrame}`);
+    return cachedData;
+  }
+  
+  console.log(`Fetching fresh leaderboard data for timeFrame: ${timeFrame}...`);
   try {
     const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
     console.log(`Fetching leaderboard data for ${orgName} with timeframe: ${timeFrame}`);
@@ -245,9 +404,7 @@ export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' =
               totalLinesOfCode: 0,
               mergedPullRequests: 0,
               openPullRequests: 0,
-              devCoins: 0,
-              totalCommits: 0,
-              commitLinesOfCode: 0
+              devCoins: 0
             };
             userStatsMap.set(author, userStats);
           }
@@ -277,56 +434,6 @@ export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' =
             console.error(`Error processing PR details for ${pr.number}:`, error);
           }
         }
-
-        // Process commits for each contributor we've found
-        const contributors = Array.from(userStatsMap.keys());
-        for (const username of contributors) {
-          try {
-            // Get commits for this user in this repo
-            const params: any = {
-              owner: repoOwner,
-              repo: repoName,
-              author: username,
-              per_page: 100
-            };
-
-            if (dateLimit) {
-              params.since = dateLimit.toISOString();
-            }
-
-            const { data: commits } = await octokit.repos.listCommits(params);
-            
-            if (!userStatsMap.has(username)) continue;
-            const userStats = userStatsMap.get(username)!;
-            
-            // Update commit count
-            userStats.totalCommits += commits.length;
-
-            // Get detailed commit data for up to 5 recent commits to analyze code changes
-            const recentCommits = commits.slice(0, 5);
-            for (const commit of recentCommits) {
-              try {
-                const { data: commitDetail } = await octokit.repos.getCommit({
-                  owner: repoOwner,
-                  repo: repoName,
-                  ref: commit.sha
-                });
-
-                // Add lines of code from this commit
-                const additions = commitDetail.files?.reduce((sum, file) => sum + (file.additions || 0), 0) || 0;
-                const deletions = commitDetail.files?.reduce((sum, file) => sum + (file.deletions || 0), 0) || 0;
-                userStats.commitLinesOfCode += (additions + deletions);
-
-                // Add more DevCoins based on commit contributions
-                userStats.devCoins += Math.floor((additions + deletions) / 20); // 1 coin per 20 lines
-              } catch (error) {
-                console.error(`Error fetching commit details for ${commit.sha}:`, error);
-              }
-            }
-          } catch (error) {
-            console.error(`Error fetching commits for ${username} in ${repoName}:`, error);
-          }
-        }
       } catch (error) {
         console.error(`Error fetching PRs for ${repoName}:`, error);
       }
@@ -349,7 +456,17 @@ export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' =
       }
     }
     
-    return userStatsArray.sort((a, b) => b.devCoins - a.devCoins);
+    const sortedStats = userStatsArray.sort((a, b) => b.devCoins - a.devCoins);
+    
+    // Cache the results
+    const cacheKey = timeFrame === 'all' 
+      ? CACHE_KEYS.LEADERBOARD_ALL 
+      : timeFrame === 'month' 
+        ? CACHE_KEYS.LEADERBOARD_MONTH 
+        : CACHE_KEYS.LEADERBOARD_WEEK;
+    cacheService.set(cacheKey, sortedStats, CACHE_EXPIRATION.LEADERBOARD);
+    
+    return sortedStats;
   } catch (error) {
     console.error('Error fetching leaderboard data:', error);
     return [];
@@ -360,6 +477,14 @@ export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' =
  * Fetches all organization members and combines them with their team memberships
  */
 export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
+  // Try to get data from cache
+  const cachedMembers = cacheService.get<GithubMember[]>(CACHE_KEYS.ORGANIZATION_MEMBERS);
+  if (cachedMembers) {
+    console.log('Using cached organization members data');
+    return cachedMembers;
+  }
+  
+  console.log('Fetching fresh organization members data...');
   try {
     const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
     console.log(`Fetching members from organization: ${orgName}`);
@@ -406,8 +531,6 @@ export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
                   totalLinesOfCode: 0,
                   mergedPullRequests: 0,
                   openPullRequests: 0,
-                  totalCommits: 0,
-                  commitLinesOfCode: 0
                 },
                 devCoins: 0
               });
@@ -447,8 +570,6 @@ export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
               totalLinesOfCode: 0,
               mergedPullRequests: 0,
               openPullRequests: 0,
-              totalCommits: 0,
-              commitLinesOfCode: 0
             },
             devCoins: 0
           });
@@ -517,8 +638,6 @@ export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
                 totalLinesOfCode: 0,
                 mergedPullRequests: 0,
                 openPullRequests: 0,
-                totalCommits: 0,
-                commitLinesOfCode: 0
               },
               devCoins: 0
             });
@@ -577,28 +696,6 @@ export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
     // Get contribution data for all members
     const contributionData = await fetchLeaderboardData();
     
-    // Fetch commit data for each member
-    for (const member of members) {
-      try {
-        // Get commits for this user across repos
-        const userCommits = await fetchUserCommits(member.username);
-        
-        if (userCommits.length > 0) {
-          // Calculate total lines changed in commits
-          const commitLinesOfCode = userCommits.reduce((sum, commit) => sum + commit.additions + commit.deletions, 0);
-          
-          // Update member stats
-          member.contributions.totalCommits = userCommits.length;
-          member.contributions.commitLinesOfCode = commitLinesOfCode;
-          
-          // Add DevCoins for commits (1 coin per 20 lines of code in commits)
-          member.devCoins += Math.floor(commitLinesOfCode / 20);
-        }
-      } catch (error) {
-        console.error(`Error fetching commits for ${member.username}:`, error);
-      }
-    }
-    
     // Merge contribution data with member profiles
     for (const member of members) {
       const userStats = contributionData.find(stat => 
@@ -606,22 +703,21 @@ export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
       );
       
       if (userStats) {
-        member.contributions.totalLinesOfCode = userStats.totalLinesOfCode;
-        member.contributions.mergedPullRequests = userStats.mergedPullRequests;
-        member.contributions.openPullRequests = userStats.openPullRequests;
-        
-        // Don't overwrite commit data if we've already fetched it directly
-        if (member.contributions.totalCommits === 0) {
-          member.contributions.totalCommits = userStats.totalCommits;
-          member.contributions.commitLinesOfCode = userStats.commitLinesOfCode;
-        }
-        
-        // Add PR-based DevCoins
-        member.devCoins += userStats.devCoins;
+        member.contributions = {
+          totalLinesOfCode: userStats.totalLinesOfCode,
+          mergedPullRequests: userStats.mergedPullRequests,
+          openPullRequests: userStats.openPullRequests,
+        };
+        member.devCoins = userStats.devCoins;
       }
     }
     
-    return members.sort((a, b) => b.devCoins - a.devCoins);
+    const sortedMembers = members.sort((a, b) => b.devCoins - a.devCoins);
+    
+    // Cache the results
+    cacheService.set(CACHE_KEYS.ORGANIZATION_MEMBERS, sortedMembers, CACHE_EXPIRATION.ORGANIZATION_MEMBERS);
+    
+    return sortedMembers;
   } catch (error) {
     console.error('Error fetching organization members:', error);
     return [];
