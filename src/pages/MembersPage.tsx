@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Users } from 'lucide-react';
+import { Search, Filter, Users, GitCommit, Code, GitPullRequest, GitPullRequestDraft } from 'lucide-react';
 import MemberCard from '../components/MemberCard';
 import MemberModal from '../components/MemberModal';
 import { mockMembers } from '../types';
@@ -43,6 +43,8 @@ export default function MembersPage() {
             totalLinesOfCode: 0,
             mergedPullRequests: 0,
             openPullRequests: 0,
+            totalCommits: 0,
+            commitLinesOfCode: 0
           },
           devCoins: member.devCoins
         })));
@@ -173,20 +175,31 @@ export default function MembersPage() {
                   </div>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2">
+              <div className="mt-4 grid grid-cols-2 gap-2 text-center">
+                <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2 flex flex-col items-center">
+                  <GitCommit className="h-4 w-4 text-blue-400 mb-1" />
+                  <div className="text-xl font-bold text-white">
+                    {member.contributions.totalCommits.toLocaleString()}
+                  </div>
+                  <div className="text-xs text-gray-400">Commits</div>
+                </div>
+                <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2 flex flex-col items-center">
+                  <Code className="h-4 w-4 text-green-400 mb-1" />
                   <div className="text-xl font-bold text-white">
                     {member.contributions.totalLinesOfCode.toLocaleString()}
                   </div>
                   <div className="text-xs text-gray-400">Lines of Code</div>
                 </div>
-                <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2">
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-center">
+                <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2 flex flex-col items-center">
+                  <GitPullRequest className="h-4 w-4 text-green-500 mb-1" />
                   <div className="text-xl font-bold text-white">
                     {member.contributions.mergedPullRequests}
                   </div>
                   <div className="text-xs text-gray-400">PRs Merged</div>
                 </div>
-                <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2">
+                <div className="bg-gray-700 bg-opacity-30 rounded-lg p-2 flex flex-col items-center">
                   <div className="text-xl font-bold text-indigo-400">
                     {member.devCoins}
                   </div>
@@ -262,28 +275,61 @@ export default function MembersPage() {
                 </div>
               </div>
               
-              <div className="mt-6 grid grid-cols-3 gap-4 text-center">
-                <div className="bg-gray-700 bg-opacity-50 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-white">
-                    {selectedMember.contributions.totalLinesOfCode.toLocaleString()}
+              <div className="mt-6">
+                <h4 className="text-md font-semibold text-gray-300">Contribution Stats</h4>
+                
+                <div className="mt-3 grid grid-cols-2 gap-4">
+                  <div className="bg-gray-700 bg-opacity-50 rounded-lg p-4">
+                    <h5 className="text-sm font-medium text-gray-400 mb-2">Code Contributions</h5>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Total Lines:</span>
+                        <span className="text-white font-semibold">
+                          {selectedMember.contributions.totalLinesOfCode.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Commits:</span>
+                        <span className="text-white font-semibold">
+                          {selectedMember.contributions.totalCommits}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Lines in Commits:</span>
+                        <span className="text-white font-semibold">
+                          {selectedMember.contributions.commitLinesOfCode.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-400">Lines of Code</div>
-                </div>
-                <div className="bg-gray-700 bg-opacity-50 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-green-400">
-                    {selectedMember.contributions.mergedPullRequests}
+                  
+                  <div className="bg-gray-700 bg-opacity-50 rounded-lg p-4">
+                    <h5 className="text-sm font-medium text-gray-400 mb-2">Pull Requests</h5>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Open PRs:</span>
+                        <span className="text-yellow-400 font-semibold">
+                          {selectedMember.contributions.openPullRequests}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Merged PRs:</span>
+                        <span className="text-green-400 font-semibold">
+                          {selectedMember.contributions.mergedPullRequests}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Total PRs:</span>
+                        <span className="text-white font-semibold">
+                          {selectedMember.contributions.openPullRequests + selectedMember.contributions.mergedPullRequests}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-400">PRs Merged</div>
-                </div>
-                <div className="bg-gray-700 bg-opacity-50 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-yellow-400">
-                    {selectedMember.contributions.openPullRequests}
-                  </div>
-                  <div className="text-xs text-gray-400">PRs Open</div>
                 </div>
               </div>
               
-              <div className="mt-6">
+              <div className="mt-6 text-center">
                 <h4 className="text-xl font-bold text-indigo-400">{selectedMember.devCoins} DevCoins</h4>
                 <p className="text-gray-400 text-sm mt-1">
                   DevCoins are earned through contributions to the organization's repositories
