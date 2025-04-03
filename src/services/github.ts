@@ -61,6 +61,27 @@ export interface UserStats {
   devCoins: number;
 }
 
+export interface GithubMember {
+  id: number;
+  username: string;
+  name: string;
+  avatarUrl: string;
+  bio: string;
+  email: string;
+  company: string;
+  location: string;
+  blog: string;
+  twitterUsername: string;
+  teamNames: string[];
+  role: string; // 'admin', 'member', or 'outside'
+  contributions: {
+    totalLinesOfCode: number;
+    mergedPullRequests: number;
+    openPullRequests: number;
+  };
+  devCoins: number;
+}
+
 export const fetchRepositories = async (): Promise<Repository[]> => {
   console.log('Fetching repositories...');
   
@@ -408,6 +429,244 @@ export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' =
     return userStatsArray.sort((a, b) => b.devCoins - a.devCoins);
   } catch (error) {
     console.error('Error fetching leaderboard data:', error);
+    return [];
+  }
+};
+
+/**
+ * Fetches all organization members and combines them with their team memberships
+ */
+export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
+  try {
+    const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
+    console.log(`Fetching members from organization: ${orgName}`);
+
+    // Check if token is configured
+    if (!import.meta.env.VITE_GITHUB_TOKEN) {
+      throw new Error('GitHub token not configured in environment variables');
+    }
+
+    // First, get all members of the organization
+    const membersMap = new Map<string, GithubMember>();
+    let page = 1;
+    let hasMore = true;
+    
+    // Fetch all organization members with pagination
+    while (hasMore) {
+      try {
+        const { data: members } = await octokit.orgs.listMembers({
+          org: orgName,
+          per_page: 100,
+          page
+        });
+        
+        if (members.length === 0) {
+          hasMore = false;
+        } else {
+          // Process each member
+          for (const member of members) {
+            if (!membersMap.has(member.login)) {
+              membersMap.set(member.login, {
+                id: member.id,
+                username: member.login,
+                name: '',
+                avatarUrl: member.avatar_url,
+                bio: '',
+                email: '',
+                company: '',
+                location: '',
+                blog: '',
+                twitterUsername: '',
+                teamNames: [],
+                role: 'member',
+                contributions: {
+                  totalLinesOfCode: 0,
+                  mergedPullRequests: 0,
+                  openPullRequests: 0,
+                },
+                devCoins: 0
+              });
+            }
+          }
+          page++;
+        }
+      } catch (error) {
+        console.error(`Error fetching org members page ${page}:`, error);
+        hasMore = false;
+      }
+    }
+
+    // Then fetch outside collaborators as well (they aren't members but contribute)
+    try {
+      const { data: outsideCollaborators } = await octokit.orgs.listOutsideCollaborators({
+        org: orgName,
+        per_page: 100
+      });
+      
+      for (const collaborator of outsideCollaborators) {
+        if (!membersMap.has(collaborator.login)) {
+          membersMap.set(collaborator.login, {
+            id: collaborator.id,
+            username: collaborator.login,
+            name: '',
+            avatarUrl: collaborator.avatar_url,
+            bio: '',
+            email: '',
+            company: '',
+            location: '',
+            blog: '',
+            twitterUsername: '',
+            teamNames: [],
+            role: 'outside',
+            contributions: {
+              totalLinesOfCode: 0,
+              mergedPullRequests: 0,
+              openPullRequests: 0,
+            },
+            devCoins: 0
+          });
+        }
+      }
+    } catch (error) {
+      console.warn('Error fetching outside collaborators:', error);
+    }
+
+    // Now get all teams in the organization
+    let teams: any[] = [];
+    page = 1;
+    hasMore = true;
+    
+    while (hasMore) {
+      try {
+        const { data: teamsPage } = await octokit.teams.list({
+          org: orgName,
+          per_page: 100,
+          page
+        });
+        
+        if (teamsPage.length === 0) {
+          hasMore = false;
+        } else {
+          teams = teams.concat(teamsPage);
+          page++;
+        }
+      } catch (error) {
+        console.error(`Error fetching teams page ${page}:`, error);
+        hasMore = false;
+      }
+    }
+    
+    console.log(`Found ${teams.length} teams in the organization`);
+
+    // For each team, get its members
+    for (const team of teams) {
+      try {
+        const { data: teamMembers } = await octokit.teams.listMembersInOrg({
+          org: orgName,
+          team_slug: team.slug,
+          per_page: 100
+        });
+        
+        // Add team name to each member's teamNames array
+        for (const member of teamMembers) {
+          if (membersMap.has(member.login)) {
+            membersMap.get(member.login)!.teamNames.push(team.name);
+          } else {
+            // If we find a team member not already in our list, add them
+            membersMap.set(member.login, {
+              id: member.id,
+              username: member.login,
+              name: '',
+              avatarUrl: member.avatar_url,
+              bio: '',
+              email: '',
+              company: '',
+              location: '',
+              blog: '',
+              twitterUsername: '',
+              teamNames: [team.name],
+              role: 'member',
+              contributions: {
+                totalLinesOfCode: 0,
+                mergedPullRequests: 0,
+                openPullRequests: 0,
+              },
+              devCoins: 0
+            });
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching members for team ${team.name}:`, error);
+      }
+    }
+    
+    // Get admins of the organization
+    try {
+      const { data: admins } = await octokit.orgs.listMembers({
+        org: orgName,
+        role: 'admin',
+        per_page: 100
+      });
+      
+      // Mark admins appropriately
+      for (const admin of admins) {
+        if (membersMap.has(admin.login)) {
+          membersMap.get(admin.login)!.role = 'admin';
+        }
+      }
+    } catch (error) {
+      console.warn('Error fetching organization admins:', error);
+    }
+    
+    // Fetch detailed information for each member
+    const members = Array.from(membersMap.values());
+    for (let i = 0; i < members.length; i++) {
+      const member = members[i];
+      
+      try {
+        // Throttle requests to avoid rate limiting
+        if (i > 0 && i % 10 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        const { data: user } = await octokit.users.getByUsername({
+          username: member.username
+        });
+        
+        member.name = user.name || user.login;
+        member.bio = user.bio || '';
+        member.email = user.email || '';
+        member.company = user.company || '';
+        member.location = user.location || '';
+        member.blog = user.blog || '';
+        member.twitterUsername = user.twitter_username || '';
+      } catch (error) {
+        console.warn(`Error fetching details for user ${member.username}:`, error);
+      }
+    }
+    
+    // Get contribution data for all members
+    const contributionData = await fetchLeaderboardData();
+    
+    // Merge contribution data with member profiles
+    for (const member of members) {
+      const userStats = contributionData.find(stat => 
+        stat.username.toLowerCase() === member.username.toLowerCase()
+      );
+      
+      if (userStats) {
+        member.contributions = {
+          totalLinesOfCode: userStats.totalLinesOfCode,
+          mergedPullRequests: userStats.mergedPullRequests,
+          openPullRequests: userStats.openPullRequests,
+        };
+        member.devCoins = userStats.devCoins;
+      }
+    }
+    
+    return members.sort((a, b) => b.devCoins - a.devCoins);
+  } catch (error) {
+    console.error('Error fetching organization members:', error);
     return [];
   }
 };
