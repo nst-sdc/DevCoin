@@ -188,6 +188,196 @@ export const fetchUserCommits = async (
 }
 
 /**
+ * Fetches commit history for a repository to analyze lines of code contributed by each author
+ * This is especially important for admins who may commit directly without PRs
+ */
+export const fetchRepositoryCommitHistory = async (
+  owner: string,
+  repo: string, 
+  timeFrame: 'all' | 'month' | 'week' = 'all'
+): Promise<Map<string, { commits: number, additions: number, deletions: number }>> => {
+  try {
+    console.log(`Fetching commit history for ${owner}/${repo}`);
+    
+    // Calculate date limit based on timeframe
+    let since: string | undefined = undefined;
+    if (timeFrame !== 'all') {
+      const now = new Date();
+      if (timeFrame === 'month') {
+        since = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).toISOString();
+      } else if (timeFrame === 'week') {
+        const weekAgo = new Date(now);
+        weekAgo.setDate(now.getDate() - 7);
+        since = weekAgo.toISOString();
+      }
+    }
+
+    // Store author stats
+    const authorStats = new Map<string, { commits: number, additions: number, deletions: number }>();
+    let page = 1;
+    let hasMore = true;
+    
+    while (hasMore) {
+      try {
+        // Fetch commits with pagination
+        const params: any = {
+          owner,
+          repo,
+          per_page: 100,
+          page
+        };
+
+        if (since) {
+          params.since = since;
+        }
+
+        const { data: commits } = await octokit.repos.listCommits(params);
+        
+        if (commits.length === 0) {
+          hasMore = false;
+          break;
+        }
+        
+        // Process each commit
+        for (const commit of commits) {
+          const author = commit.author?.login || commit.commit.author?.email || 'unknown';
+          
+          // Skip commits without a valid author
+          if (author === 'unknown') continue;
+          
+          // Get commit details to find additions/deletions
+          try {
+            const { data: commitDetail } = await octokit.repos.getCommit({
+              owner,
+              repo,
+              ref: commit.sha
+            });
+            
+            // Calculate total additions/deletions
+            const additions = commitDetail.files?.reduce((sum, file) => sum + (file.additions || 0), 0) || 0;
+            const deletions = commitDetail.files?.reduce((sum, file) => sum + (file.deletions || 0), 0) || 0;
+            
+            // Update author stats
+            if (!authorStats.has(author)) {
+              authorStats.set(author, { commits: 0, additions: 0, deletions: 0 });
+            }
+            
+            const stats = authorStats.get(author)!;
+            stats.commits++;
+            stats.additions += additions;
+            stats.deletions += deletions;
+          } catch (error) {
+            console.error(`Error fetching details for commit ${commit.sha}:`, error);
+          }
+        }
+        
+        page++;
+        
+        // Throttle API calls to avoid rate limiting
+        if (page % 3 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      } catch (error) {
+        console.error(`Error fetching commits for ${owner}/${repo} page ${page}:`, error);
+        hasMore = false;
+      }
+    }
+    
+    return authorStats;
+  } catch (error) {
+    console.error(`Error in fetchRepositoryCommitHistory for ${owner}/${repo}:`, error);
+    return new Map();
+  }
+};
+
+/**
+ * Fetches admin direct commit contributions across all repositories
+ */
+export const fetchAdminDirectCommits = async (
+  timeFrame: 'all' | 'month' | 'week' = 'all'
+): Promise<Map<string, { commits: number, linesOfCode: number }>> => {
+  try {
+    const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
+    
+    // Get all repositories
+    const repositories = await fetchRepositories();
+    
+    // Get all admin users
+    const adminUsers = new Set<string>();
+    
+    // Get organization admins
+    try {
+      const { data: admins } = await octokit.orgs.listMembers({
+        org: orgName,
+        role: 'admin',
+        per_page: 100
+      });
+      
+      admins.forEach(admin => {
+        adminUsers.add(admin.login);
+      });
+      
+      console.log(`Found ${adminUsers.size} admins in the organization`);
+    } catch (error) {
+      console.error('Error fetching organization admins:', error);
+    }
+    
+    // Get repo admins (users with admin access to repos but not org admins)
+    for (const repo of repositories) {
+      try {
+        const { data: collaborators } = await octokit.repos.listCollaborators({
+          owner: orgName,
+          repo: repo.name,
+          per_page: 100
+        });
+        
+        collaborators.forEach(collab => {
+          if (collab.permissions?.admin) {
+            adminUsers.add(collab.login);
+          }
+        });
+      } catch (error) {
+        console.error(`Error fetching collaborators for ${repo.name}:`, error);
+      }
+    }
+    
+    console.log(`Total admin users found (org admins + repo admins): ${adminUsers.size}`);
+    
+    // Store combined admin stats
+    const adminStats = new Map<string, { commits: number, linesOfCode: number }>();
+    
+    // Process each repository
+    for (const repo of repositories) {
+      const repoOwner = repo.fork && repo.parentRepo ? repo.parentRepo.owner : orgName;
+      const repoName = repo.fork && repo.parentRepo ? repo.parentRepo.name : repo.name;
+      
+      try {
+        // Get commit stats for this repo
+        const repoCommitStats = await fetchRepositoryCommitHistory(repoOwner, repoName, timeFrame);
+        
+        // Update admin stats
+        for (const [author, stats] of repoCommitStats.entries()) {
+          if (!adminStats.has(author)) {
+            adminStats.set(author, { commits: 0, linesOfCode: 0 });
+          }
+          
+          const adminStat = adminStats.get(author)!;
+          adminStat.commits += stats.commits;
+          adminStat.linesOfCode += stats.additions + stats.deletions;
+        }
+      } catch (error) {
+        console.error(`Error processing commit history for ${repoName}:`, error);
+      }
+    }
+    
+    return adminStats;
+  } catch (error) {
+    console.error('Error fetching admin direct commits:', error);
+    return new Map();
+  }
+};
+
+/**
  * Fetches leaderboard data showing users ranked by their GitHub contributions
  * Includes lines of code, merged PRs, and open PRs
  */
@@ -279,8 +469,8 @@ export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' =
         }
 
         // Process commits for each contributor we've found
-        const contributors = Array.from(userStatsMap.keys());
-        for (const username of contributors) {
+        const contributorNames = Array.from(userStatsMap.keys());
+        for (const username of contributorNames) {
           try {
             // Get commits for this user in this repo
             const params: any = {
@@ -329,6 +519,44 @@ export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' =
         }
       } catch (error) {
         console.error(`Error fetching PRs for ${repoName}:`, error);
+      }
+    }
+    
+    // Now get direct commit contributions, especially important for admins
+    // who often commit directly without PRs
+    console.log("Fetching admin direct commit contributions...");
+    const adminDirectCommits = await fetchAdminDirectCommits(timeFrame);
+    
+    // Merge admin direct commit data with other contributions
+    for (const [username, stats] of adminDirectCommits.entries()) {
+      if (!userStatsMap.has(username)) {
+        // Create new user stats if we haven't seen this user yet
+        userStatsMap.set(username, {
+          username,
+          name: '', 
+          avatarUrl: '',
+          totalLinesOfCode: stats.linesOfCode,
+          mergedPullRequests: 0,
+          openPullRequests: 0,
+          devCoins: Math.floor(stats.linesOfCode / 20), // 1 coin per 20 lines
+          totalCommits: stats.commits,
+          commitLinesOfCode: stats.linesOfCode
+        });
+      } else {
+        // Update existing user stats with direct commit data
+        const userStats = userStatsMap.get(username)!;
+        
+        // Add lines from direct commits that weren't already counted via PR analysis
+        const newLinesOfCode = Math.max(0, stats.linesOfCode - userStats.commitLinesOfCode);
+        userStats.totalLinesOfCode += newLinesOfCode;
+        userStats.commitLinesOfCode = stats.linesOfCode; // Use the more comprehensive count
+        
+        // Update commit count if admin direct commit analysis found more
+        if (stats.commits > userStats.totalCommits) {
+          const additionalCommits = stats.commits - userStats.totalCommits;
+          userStats.totalCommits = stats.commits;
+          userStats.devCoins += additionalCommits * 2; // 2 coins per additional direct commit found
+        }
       }
     }
     
@@ -574,30 +802,9 @@ export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
       }
     }
     
-    // Get contribution data for all members
+    // Get contribution data for all members, including direct commit analysis
+    console.log("Fetching complete contribution data including direct commits...");
     const contributionData = await fetchLeaderboardData();
-    
-    // Fetch commit data for each member
-    for (const member of members) {
-      try {
-        // Get commits for this user across repos
-        const userCommits = await fetchUserCommits(member.username);
-        
-        if (userCommits.length > 0) {
-          // Calculate total lines changed in commits
-          const commitLinesOfCode = userCommits.reduce((sum, commit) => sum + commit.additions + commit.deletions, 0);
-          
-          // Update member stats
-          member.contributions.totalCommits = userCommits.length;
-          member.contributions.commitLinesOfCode = commitLinesOfCode;
-          
-          // Add DevCoins for commits (1 coin per 20 lines of code in commits)
-          member.devCoins += Math.floor(commitLinesOfCode / 20);
-        }
-      } catch (error) {
-        console.error(`Error fetching commits for ${member.username}:`, error);
-      }
-    }
     
     // Merge contribution data with member profiles
     for (const member of members) {
@@ -606,18 +813,15 @@ export const fetchOrganizationMembers = async (): Promise<GithubMember[]> => {
       );
       
       if (userStats) {
-        member.contributions.totalLinesOfCode = userStats.totalLinesOfCode;
-        member.contributions.mergedPullRequests = userStats.mergedPullRequests;
-        member.contributions.openPullRequests = userStats.openPullRequests;
+        member.contributions = {
+          totalLinesOfCode: userStats.totalLinesOfCode,
+          mergedPullRequests: userStats.mergedPullRequests,
+          openPullRequests: userStats.openPullRequests,
+          totalCommits: userStats.totalCommits,
+          commitLinesOfCode: userStats.commitLinesOfCode
+        };
         
-        // Don't overwrite commit data if we've already fetched it directly
-        if (member.contributions.totalCommits === 0) {
-          member.contributions.totalCommits = userStats.totalCommits;
-          member.contributions.commitLinesOfCode = userStats.commitLinesOfCode;
-        }
-        
-        // Add PR-based DevCoins
-        member.devCoins += userStats.devCoins;
+        member.devCoins = userStats.devCoins;
       }
     }
     
