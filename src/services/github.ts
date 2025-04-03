@@ -21,6 +21,11 @@ export interface Repository {
   updatedAt: string;
   openIssues: number;
   pullRequests: PullRequest[];
+  fork: boolean;
+  parentRepo?: {
+    name: string;
+    owner: string;
+  };
 }
 
 export interface PullRequest {
@@ -46,6 +51,16 @@ export interface UserContribution {
   points: number;
 }
 
+export interface UserStats {
+  username: string;
+  name: string;
+  avatarUrl: string;
+  totalLinesOfCode: number;
+  mergedPullRequests: number;
+  openPullRequests: number;
+  devCoins: number;
+}
+
 export const fetchRepositories = async (): Promise<Repository[]> => {
   console.log('Fetching repositories...');
   
@@ -69,7 +84,8 @@ export const fetchRepositories = async (): Promise<Repository[]> => {
         org: orgName,
         sort: 'updated',
         direction: 'desc',
-        per_page: 100
+        per_page: 100,
+        type: 'all' // Include both regular and forked repos
       });
       repos = data;
       console.log(`Found ${repos.length} repositories in the organization ${orgName}`);
@@ -117,8 +133,28 @@ export const fetchRepositories = async (): Promise<Repository[]> => {
     }
 
     const repositories = await Promise.all(repos.map(async repo => {
+      // Get parent repo info if it's a fork
+      let parentRepo = undefined;
+      if (repo.fork) {
+        try {
+          const { data: repoData } = await octokit.repos.get({
+            owner: repo.owner.login,
+            repo: repo.name
+          });
+          
+          if (repoData.parent) {
+            parentRepo = {
+              name: repoData.parent.name,
+              owner: repoData.parent.owner.login
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching parent repo info for ${repo.name}:`, error);
+        }
+      }
+
       const { data: pulls } = await octokit.pulls.list({
-        owner: orgName,
+        owner: repo.owner.login,
         repo: repo.name,
         state: 'all',
         per_page: 10,
@@ -134,7 +170,7 @@ export const fetchRepositories = async (): Promise<Repository[]> => {
         
         try {
           const { data: prDetails } = await octokit.pulls.get({
-            owner: orgName,
+            owner: repo.owner.login,
             repo: repo.name,
             pull_number: pr.number
           });
@@ -161,11 +197,13 @@ export const fetchRepositories = async (): Promise<Repository[]> => {
         name: repo.name,
         description: repo.description || '',
         url: repo.html_url,
-        stars: repo.stargazers_count || 0, // Ensure it's always a number
+        stars: repo.stargazers_count || 0,
         language: repo.language || 'Unknown',
-        updatedAt: repo.updated_at || new Date().toISOString(), // Ensure it's always a string
-        openIssues: repo.open_issues_count || 0, // Ensure it's always a number
-        pullRequests
+        updatedAt: repo.updated_at || new Date().toISOString(),
+        openIssues: repo.open_issues_count || 0,
+        pullRequests,
+        fork: repo.fork || false,
+        parentRepo
       };
     }));
 
@@ -255,6 +293,147 @@ export const fetchUserContributions = async (username: string): Promise<UserCont
     console.error('Error fetching user contributions:', error);
     return [];
   }
+};
+
+/**
+ * Fetches leaderboard data showing users ranked by their GitHub contributions
+ * Includes lines of code, merged PRs, and open PRs
+ */
+export const fetchLeaderboardData = async (timeFrame: 'all' | 'month' | 'week' = 'all'): Promise<UserStats[]> => {
+  try {
+    const orgName = import.meta.env.VITE_GITHUB_ORG || 'NST-SDC';
+    console.log(`Fetching leaderboard data for ${orgName} with timeframe: ${timeFrame}`);
+
+    // Get repositories including forks
+    const repositories = await fetchRepositories();
+    
+    // Track user stats
+    const userStatsMap = new Map<string, UserStats>();
+    
+    // Calculate date limit based on timeframe
+    let dateLimit: Date | null = null;
+    const now = new Date();
+    if (timeFrame === 'month') {
+      dateLimit = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    } else if (timeFrame === 'week') {
+      dateLimit = new Date(now);
+      dateLimit.setDate(now.getDate() - 7);
+    }
+
+    // For each repository, process pull requests
+    for (const repo of repositories) {
+      // Process both direct repos and track contributions to parent repos
+      const repoOwner = repo.fork && repo.parentRepo ? repo.parentRepo.owner : orgName;
+      const repoName = repo.fork && repo.parentRepo ? repo.parentRepo.name : repo.name;
+      
+      try {
+        // Fetch all pull requests for this repo
+        const { data: pulls } = await octokit.pulls.list({
+          owner: repoOwner,
+          repo: repoName,
+          state: 'all',
+          per_page: 100
+        });
+
+        // For each pull request, get the detailed stats
+        for (const pr of pulls) {
+          // Apply timeframe filter
+          if (dateLimit && new Date(pr.created_at) < dateLimit) continue;
+          
+          const author = pr.user?.login;
+          if (!author) continue;
+          
+          // Get or create user stats entry
+          let userStats = userStatsMap.get(author);
+          if (!userStats) {
+            userStats = {
+              username: author,
+              name: '', // Will be populated from profile if available
+              avatarUrl: pr.user?.avatar_url || '',
+              totalLinesOfCode: 0,
+              mergedPullRequests: 0,
+              openPullRequests: 0,
+              devCoins: 0
+            };
+            userStatsMap.set(author, userStats);
+          }
+          
+          try {
+            // Get detailed PR info
+            const { data: prDetails } = await octokit.pulls.get({
+              owner: repoOwner,
+              repo: repoName,
+              pull_number: pr.number
+            });
+            
+            // Update statistics
+            userStats.totalLinesOfCode += (prDetails.additions || 0) + (prDetails.deletions || 0);
+            
+            // Update PR counts
+            if (pr.state === 'open') {
+              userStats.openPullRequests++;
+            } else if (prDetails.merged) {
+              userStats.mergedPullRequests++;
+            }
+            
+            // Calculate DevCoins based on contributions
+            userStats.devCoins += calculateDevCoins(prDetails);
+            
+          } catch (error) {
+            console.error(`Error processing PR details for ${pr.number}:`, error);
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching PRs for ${repoName}:`, error);
+      }
+    }
+    
+    // Try to get additional user info from profiles
+    const userStatsArray = Array.from(userStatsMap.values());
+    for (const stats of userStatsArray) {
+      try {
+        const { data: userProfile } = await octokit.users.getByUsername({
+          username: stats.username
+        });
+        
+        stats.name = userProfile.name || userProfile.login;
+        if (!stats.avatarUrl && userProfile.avatar_url) {
+          stats.avatarUrl = userProfile.avatar_url;
+        }
+      } catch (error) {
+        console.error(`Error fetching profile for ${stats.username}:`, error);
+      }
+    }
+    
+    return userStatsArray.sort((a, b) => b.devCoins - a.devCoins);
+  } catch (error) {
+    console.error('Error fetching leaderboard data:', error);
+    return [];
+  }
+};
+
+// Calculate DevCoins based on PR stats
+const calculateDevCoins = (pr: any): number => {
+  let coins = 0;
+  
+  // Base points for creating a PR
+  coins += 10;
+  
+  // Points for code contribution (1 coin per 10 lines changed)
+  const linesChanged = (pr.additions || 0) + (pr.deletions || 0);
+  coins += Math.floor(linesChanged / 10);
+  
+  // Bonus for merged PRs
+  if (pr.merged) {
+    coins += 15;
+    
+    // Additional bonus based on PR size
+    if (linesChanged > 500) coins += 20;
+    else if (linesChanged > 200) coins += 10;
+    else if (linesChanged > 50) coins += 5;
+  }
+  
+  return coins;
 };
 
 const calculatePoints = (contribution: any): number => {
